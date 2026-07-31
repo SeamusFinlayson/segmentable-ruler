@@ -29,6 +29,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
   let currentRulerInitTime = 0;
 
   // State that doesn't require extra handling
+  let interactionType: undefined | "DRAG" | "CLICK" = undefined;
   let initialInteractedItem: Item | null = null;
   let sharedAttachments: Item[] = [];
   let localAttachments: Item[] = [];
@@ -205,58 +206,74 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
       { cursor: "crosshair" },
     ],
     onToolDragStart: async (_, event) => {
-      createRulerInteractions(event);
+      if (interactionType === undefined) {
+        interactionType = "DRAG";
+        createRulerInteractions(event);
+      }
     },
-    onToolDragMove: (_, event) => {
+    onToolClick: async (_, event) => {
+      if (interactions.length === 0 && interactionType === undefined) {
+        interactionType = "CLICK";
+        createRulerInteractions(event);
+      } else if (interactionType === "CLICK") {
+        rulerPoints.push(
+          await calculateSegmentEndPosition(
+            grid,
+            rulerPoints[rulerPoints.length - 1],
+            pointerPosition,
+          ),
+        );
+      }
+    },
+    onToolMove: (_, event) => {
+      if (interactions.length === 0) return;
       pointerPosition = event.pointerPosition;
       updateToolItems();
       // OBR.player.deselect();
     },
     onKeyDown: async (_, event) => {
-      if (interactions || true) {
-        if (event.key === "z" || event.key === "Z") {
-          // Add segment
-          rulerPoints.push(
-            await calculateSegmentEndPosition(
-              grid,
-              rulerPoints[rulerPoints.length - 1],
-              pointerPosition,
-            ),
-          );
+      if (!interactions) return;
+
+      if (event.key.toLowerCase() === "z") {
+        // Add segment
+        rulerPoints.push(
+          await calculateSegmentEndPosition(
+            grid,
+            rulerPoints[rulerPoints.length - 1],
+            pointerPosition,
+          ),
+        );
+      }
+
+      if (event.key.toLowerCase() === "x" && rulerPoints.length > 1) {
+        // Remove most recent segment
+        rulerPoints.pop();
+        // Refresh with segment removed
+        updateToolItems(true);
+      }
+
+      if (event.key === "Escape") {
+        // Fix bug where token is not locally displayed at its initial position on cancel
+        const manager = interactions.find(
+          (value) => value.initTime === currentRulerInitTime,
+        )?.manager;
+
+        if (manager) {
+          manager[0]((items) => {
+            items.forEach((item) => {
+              if (initialInteractedItem && item.id === initialInteractedItem.id)
+                item.position = initialInteractedItem.position;
+            });
+          });
         }
 
-        if (
-          (event.key === "x" || event.key === "X") &&
-          rulerPoints.length > 1
-        ) {
-          // Remove most recent segment
-          rulerPoints.pop();
-          // Refresh with segment removed
-          updateToolItems(true);
-        }
-
-        if (event.key === "Enter") {
-          // Run final update
-          const items = await updateToolItems();
-          await updateInteractionTargetItems(pointerPosition);
-
-          // Add ruler to the scene
-          const ruler: Item[] = [];
-          for (let rulerId of Object.values(rulerIds)) {
-            for (let item of items) {
-              if (item.id === rulerId) {
-                ruler.push(item);
-                break;
-              }
-            }
-          }
-          OBR.scene.items.addItems(ruler);
-
-          endUnusedInteractions();
-        }
+        currentRulerInitTime = 0;
+        interactionType = undefined;
+        endUnusedInteractions();
       }
     },
-    onToolDragEnd: async (_, event) => {
+    onToolDoubleClick: async (_, event) => {
+      if (interactionType !== "CLICK") return;
       // Run final update
       const items = await updateToolItems();
       await updateInteractionTargetItems(event.pointerPosition);
@@ -282,9 +299,41 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
       if (addItemsToScene) OBR.scene.items.addItems(ruler);
 
       currentRulerInitTime = 0;
+      interactionType = undefined;
+      endUnusedInteractions();
+    },
+    onToolDragEnd: async (_, event) => {
+      if (interactionType !== "DRAG") return;
+      // Run final update
+      const items = await updateToolItems();
+      await updateInteractionTargetItems(event.pointerPosition);
+
+      // Add ruler to the scene
+      const ruler: Item[] = [];
+      let addItemsToScene = true;
+      for (let rulerId of Object.values(rulerIds)) {
+        for (let item of items) {
+          if (
+            item.id === rulerIds.label &&
+            isLabel(item) &&
+            item.text.plainText.startsWith("0")
+          ) {
+            addItemsToScene = false;
+          }
+          if (item.id === rulerId) {
+            ruler.push(item);
+            break;
+          }
+        }
+      }
+      if (addItemsToScene) OBR.scene.items.addItems(ruler);
+
+      currentRulerInitTime = 0;
+      interactionType = undefined;
       endUnusedInteractions();
     },
     onToolDragCancel: () => {
+      if (interactionType !== "DRAG") return;
       // Fix bug where token is not locally displayed at its initial position on cancel
       const manager = interactions.find(
         (value) => value.initTime === currentRulerInitTime,
@@ -300,6 +349,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
       }
 
       currentRulerInitTime = 0;
+      interactionType = undefined;
       endUnusedInteractions();
     },
   });

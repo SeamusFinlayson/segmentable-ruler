@@ -46,6 +46,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
   };
 
   // State that doesn't require extra handling
+  let interactionType: undefined | "DRAG" | "CLICK" = undefined;
   let rulerPoints: Vector2[] = []; // Points in the line being measured
   let pointerPosition: Vector2; // Track pointer position so it accessible to keyboard events
   let lastPosition: Vector2; // Memoize last position the token snapped to to prevent path measurement recalculation
@@ -64,6 +65,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     ],
     cursors: [{ cursor: "crosshair" }],
     onToolDragStart: async (_, event) => {
+      interactionType = "DRAG";
       pointerPosition = event.pointerPosition;
       dragStarted = true;
 
@@ -92,42 +94,99 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
       // may already be expired if the drag was short enough
       stopExpiredInteractions();
     },
-    onToolDragMove: (_, event) => {
+    onToolClick: async (_, event) => {
+      if (!dragStarted && interactionType === undefined) {
+        interactionType = "CLICK";
+        pointerPosition = event.pointerPosition;
+        dragStarted = true;
+
+        const startPosition = await snapPosition(
+          grid,
+          event.target && isImage(event.target) && !event.target.locked
+            ? event.target.position
+            : pointerPosition,
+        );
+        rulerPoints = [];
+        rulerPoints.push(startPosition);
+        lastPosition = startPosition;
+
+        OBR.scene.local.addItems(
+          await buildRuler(
+            rulerIds,
+            grid,
+            player,
+            [startPosition, await snapPosition(grid, pointerPosition)],
+            true,
+            true,
+          ),
+        );
+
+        // Because this function is asynchronous, interactions
+        // may already be expired if the drag was short enough
+        stopExpiredInteractions();
+      } else {
+        // Add segment
+        rulerPoints.push(
+          await calculateSegmentEndPosition(
+            grid,
+            rulerPoints[rulerPoints.length - 1],
+            pointerPosition,
+          ),
+        );
+      }
+    },
+    onToolMove: (_, event) => {
+      if (!dragStarted) return;
       pointerPosition = event.pointerPosition;
       updateToolItems();
     },
     onKeyDown: async (_, event) => {
-      if (dragStarted) {
-        if (event.key === "z" || event.key === "Z") {
-          // Add segment
-          rulerPoints.push(
-            await calculateSegmentEndPosition(
-              grid,
-              rulerPoints[rulerPoints.length - 1],
-              pointerPosition,
-            ),
-          );
-        }
+      if (!dragStarted) return;
 
-        if (
-          (event.key === "x" || event.key === "X") &&
-          rulerPoints.length > 1
-        ) {
-          // Remove most recent segment
-          rulerPoints.pop();
-          // Refresh with segment removed
-          updateToolItems(true);
-        }
+      if (event.key.toLowerCase() === "z") {
+        // Add segment
+        rulerPoints.push(
+          await calculateSegmentEndPosition(
+            grid,
+            rulerPoints[rulerPoints.length - 1],
+            pointerPosition,
+          ),
+        );
+      }
+
+      if (event.key.toLowerCase() === "x" && rulerPoints.length > 1) {
+        // Remove most recent segment
+        rulerPoints.pop();
+        // Refresh with segment removed
+        updateToolItems(true);
+      }
+
+      if (event.key === "Escape") {
+        await updateToolItems();
+        expireAllInteractions();
+        stopExpiredInteractions();
+        interactionType = undefined;
       }
     },
-    onToolDragEnd: async () => {
+    onToolDoubleClick: async () => {
+      if (interactionType !== "CLICK") return;
       await updateToolItems();
       expireAllInteractions();
       stopExpiredInteractions();
+      interactionType = undefined;
     },
-    onToolDragCancel: () => {
+    onToolDragEnd: async () => {
+      if (interactionType !== "DRAG") return;
+      await updateToolItems();
       expireAllInteractions();
       stopExpiredInteractions();
+      interactionType = undefined;
+    },
+    onToolDragCancel: () => {
+      if (interactionType !== "DRAG") return;
+      expireAllInteractions();
+      stopExpiredInteractions();
+      interactionType = undefined;
     },
   });
 
