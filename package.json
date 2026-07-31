@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "deploy-site": "./deploy.sh",
     "preview": "vite preview"
   },
   "devDependencies": {
