@@ -65,6 +65,8 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     ],
     cursors: [{ cursor: "crosshair" }],
     onToolDragStart: async (_, event) => {
+      if (dragStarted) return undefined;
+
       interactionType = "DRAG";
       pointerPosition = event.pointerPosition;
       dragStarted = true;
