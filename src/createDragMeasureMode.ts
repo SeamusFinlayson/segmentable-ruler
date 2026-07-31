@@ -78,7 +78,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
             player,
             [startPosition, await snapPosition(grid, pointerPosition)],
             token.visible,
-            true
+            true,
           )),
           token,
         ]),
@@ -100,8 +100,8 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
             player,
             [startPosition, pointerPosition],
             true,
-            true
-          )
+            true,
+          ),
         ),
       ]);
     }
@@ -127,7 +127,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
       const endPointPosition = await calculateSegmentEndPosition(
         grid,
         rulerPoints[rulerPoints.length - 1],
-        pointerPosition
+        pointerPosition,
       );
       if (initialInteractedItem !== null) {
         const endPointItem = { ...initialInteractedItem };
@@ -141,7 +141,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
                 player,
                 [...rulerPoints, endPointPosition],
                 endPointItem.visible,
-                true
+                true,
               )),
               endPointItem,
             ]),
@@ -157,8 +157,8 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
               player,
               [...rulerPoints, endPointPosition],
               true,
-              true
-            )
+              true,
+            ),
           ),
         ]);
       }
@@ -220,8 +220,8 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
             await calculateSegmentEndPosition(
               grid,
               rulerPoints[rulerPoints.length - 1],
-              pointerPosition
-            )
+              pointerPosition,
+            ),
           );
         }
 
@@ -287,12 +287,12 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     onToolDragCancel: () => {
       // Fix bug where token is not locally displayed at its initial position on cancel
       const manager = interactions.find(
-        value => value.initTime === currentRulerInitTime
+        (value) => value.initTime === currentRulerInitTime,
       )?.manager;
 
       if (manager) {
-        manager[0](items => {
-          items.forEach(item => {
+        manager[0]((items) => {
+          items.forEach((item) => {
             if (initialInteractedItem && item.id === initialInteractedItem.id)
               item.position = initialInteractedItem.position;
           });
@@ -309,7 +309,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
       const newPosition = await calculateSegmentEndPosition(
         grid,
         rulerPoints[rulerPoints.length - 1],
-        pointerPosition
+        pointerPosition,
       );
 
       const positionChange = {
@@ -337,7 +337,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     const newPosition = await calculateSegmentEndPosition(
       grid,
       rulerPoints[rulerPoints.length - 1],
-      pointerPosition
+      pointerPosition,
     );
 
     let newText: string | null = null;
@@ -354,11 +354,11 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
 
     let items: Item[] = [];
     const manager = interactions.find(
-      value => value.initTime === currentRulerInitTime
+      (value) => value.initTime === currentRulerInitTime,
     )?.manager;
     if (manager) {
-      items = manager[0](items => {
-        items.forEach(item => {
+      items = manager[0]((items) => {
+        items.forEach((item) => {
           if (initialInteractedItem && item.id === initialInteractedItem.id) {
             item.position = newPosition;
           } else if (item.id === rulerIds.line && isCurve(item)) {

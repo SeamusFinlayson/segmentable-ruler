@@ -15,7 +15,7 @@ export interface Grid {
     dpi: number,
     type: GridType,
     measurement: GridMeasurement,
-    scale: GridScale
+    scale: GridScale,
   ) => void;
 }
 
@@ -23,7 +23,7 @@ export function createGrid(
   dpi: number,
   type: GridType,
   measurement: GridMeasurement,
-  scale: GridScale
+  scale: GridScale,
 ): Grid {
   const grid: Grid = {
     dpi: dpi,
@@ -34,7 +34,7 @@ export function createGrid(
       dpi: number,
       type: GridType,
       measurement: GridMeasurement,
-      scale: GridScale
+      scale: GridScale,
     ) => {
       grid.dpi = dpi;
       grid.type = type;

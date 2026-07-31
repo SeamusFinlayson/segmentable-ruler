@@ -23,7 +23,7 @@ export function createClearRulersAction(player: Player) {
       ],
       onClick: async () => {
         const items = await OBR.scene.items.getItems(
-          item => item.layer === "RULER"
+          (item) => item.layer === "RULER",
         );
         const deleteList: string[] = [];
         for (let item of items) {
@@ -46,7 +46,7 @@ export function createClearRulersAction(player: Player) {
       ],
       onClick: async () => {
         const items = await OBR.scene.items.getItems(
-          item => item.layer === "RULER"
+          (item) => item.layer === "RULER",
         );
         const deleteList: string[] = [];
         for (let item of items) {

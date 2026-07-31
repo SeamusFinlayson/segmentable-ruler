@@ -71,7 +71,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
         grid,
         event.target && isImage(event.target) && !event.target.locked
           ? event.target.position
-          : pointerPosition
+          : pointerPosition,
       );
       rulerPoints = [];
       rulerPoints.push(startPosition);
@@ -84,8 +84,8 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
           player,
           [startPosition, await snapPosition(grid, pointerPosition)],
           true,
-          true
-        )
+          true,
+        ),
       );
 
       // Because this function is asynchronous, interactions
@@ -104,8 +104,8 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
             await calculateSegmentEndPosition(
               grid,
               rulerPoints[rulerPoints.length - 1],
-              pointerPosition
-            )
+              pointerPosition,
+            ),
           );
         }
 
@@ -135,7 +135,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     const newPosition = await calculateSegmentEndPosition(
       grid,
       rulerPoints[rulerPoints.length - 1],
-      pointerPosition
+      pointerPosition,
     );
 
     let labelText: string | null = null;
@@ -155,8 +155,8 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     if (dragStarted) {
       OBR.scene.local.updateItems(
         Object.values(rulerIds),
-        items => {
-          items.forEach(item => {
+        (items) => {
+          items.forEach((item) => {
             if (item.id === rulerIds.line && isCurve(item)) {
               item.points = [...rulerPoints, newPosition];
             } else if (item.id === rulerIds.background && isCurve(item)) {
@@ -169,7 +169,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
             }
           });
         },
-        true
+        true,
       );
     }
     lastPosition = newPosition;

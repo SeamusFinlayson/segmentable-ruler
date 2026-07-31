@@ -11,7 +11,7 @@ function getPluginId(path: string) {
 export function getItemId(
   name: string,
   playerId: string,
-  local = false
+  local = false,
 ): string {
   return `${SHORT_ID_PREFIX}-${name}-${playerId}` + (local ? "-local" : "");
 }

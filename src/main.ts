@@ -14,13 +14,15 @@ OBR.onReady(async () => {
 
 async function printVersionToConsole() {
   fetch("/manifest.json")
-    .then(response => response.json())
-    .then(json => console.log(json["name"] + " - version: " + json["version"]));
+    .then((response) => response.json())
+    .then((json) =>
+      console.log(json["name"] + " - version: " + json["version"]),
+    );
 }
 
 async function startWhenSceneIsReady() {
   // Handle when the scene is either changed or made ready after extension load
-  OBR.scene.onReadyChange(async isReady => {
+  OBR.scene.onReadyChange(async (isReady) => {
     if (isReady) start();
   });
 
@@ -64,16 +66,16 @@ async function startCallbacks(grid: Grid, player: Player) {
   if (!callbacksStarted) {
     callbacksStarted = true;
 
-    const unsubscribeFromGrid = OBR.scene.grid.onChange(async newGrid => {
+    const unsubscribeFromGrid = OBR.scene.grid.onChange(async (newGrid) => {
       grid.update(
         newGrid.dpi,
         newGrid.type,
         newGrid.measurement,
-        await OBR.scene.grid.getScale()
+        await OBR.scene.grid.getScale(),
       );
     });
 
-    const unsubscribeFromPlayer = OBR.player.onChange(async newPlayer => {
+    const unsubscribeFromPlayer = OBR.player.onChange(async (newPlayer) => {
       player.id = newPlayer.id;
       player.color = newPlayer.color;
       player.role = newPlayer.role;
@@ -81,7 +83,7 @@ async function startCallbacks(grid: Grid, player: Player) {
     });
 
     // Unsubscribe listeners that rely on the scene if it stops being ready
-    const unsubscribeFromScene = OBR.scene.onReadyChange(isReady => {
+    const unsubscribeFromScene = OBR.scene.onReadyChange((isReady) => {
       if (!isReady) {
         unsubscribeFromGrid();
         unsubscribeFromPlayer();

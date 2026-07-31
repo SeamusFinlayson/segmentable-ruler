@@ -15,7 +15,7 @@ export async function buildRuler(
   player: Player,
   points: Vector2[],
   visible: boolean,
-  endDot: boolean
+  endDot: boolean,
 ): Promise<Item[]> {
   const rulerConstituentItems: any[] = [];
 
@@ -32,7 +32,7 @@ export async function buildRuler(
       .visible(visible)
       .layer("RULER")
       .zIndex(10002)
-      .build()
+      .build(),
   );
 
   rulerConstituentItems.push(
@@ -48,7 +48,7 @@ export async function buildRuler(
       .layer("RULER")
       .zIndex(10004)
       .disableHit(true)
-      .build()
+      .build(),
   );
 
   if (endDot) {
@@ -67,7 +67,7 @@ export async function buildRuler(
         .height(grid.dpi / 4)
         .zIndex(10001)
         .disableHit(true)
-        .build()
+        .build(),
     );
   }
 
@@ -86,7 +86,7 @@ export async function buildRuler(
         .layer("RULER")
         .zIndex(10000)
         .disableHit(true)
-        .build()
+        .build(),
     );
   }
 
