@@ -2,7 +2,7 @@ import OBR from "@owlbear-rodeo/sdk";
 import { createGrid } from "./types";
 import { Grid } from "./types";
 import { Player } from "./types";
-import { createClearRulersAction } from "./createClearRulersAction";
+import { createRulerActions } from "./createClearRulersAction";
 import { createDragMeasureMode } from "./createDragMeasureMode";
 import { createSegmentableRulerTool } from "./createSegmentableRulerTool";
 import { createPrivateDragMeasureMode } from "./createPrivateDragMeasureMode";
@@ -32,6 +32,9 @@ async function startWhenSceneIsReady() {
 }
 
 async function start() {
+  createSegmentableRulerTool();
+  createRulerActions();
+
   const [
     gridDpi,
     gridType,
@@ -53,11 +56,9 @@ async function start() {
 
   const player: Player = { id: playerId, color: playerColor, role: playerRole };
 
-  startCallbacks(grid, player);
-  createSegmentableRulerTool();
   createDragMeasureMode(grid, player);
   createPrivateDragMeasureMode(grid, player);
-  createClearRulersAction(player);
+  startCallbacks(grid, player);
 }
 
 // Keep passed objects up to date with the scene
@@ -79,7 +80,6 @@ async function startCallbacks(grid: Grid, player: Player) {
       player.id = newPlayer.id;
       player.color = newPlayer.color;
       player.role = newPlayer.role;
-      createClearRulersAction(player);
     });
 
     // Unsubscribe listeners that rely on the scene if it stops being ready

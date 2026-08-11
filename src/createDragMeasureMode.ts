@@ -15,9 +15,15 @@ import {
   calculateDisplayDistance,
   getLabelPosition,
 } from "./mathHelpers";
-import { DRAG_MEASURE_MODE_ID, getItemId, TOOL_ID } from "./idStrings";
+import {
+  DRAG_MEASURE_MODE_ID,
+  getItemId,
+  RULER_MESSAGE_CHANNEL,
+  TOOL_ID,
+} from "./idStrings";
 import { Grid, Player, RulerIds } from "./types";
 import { buildRuler } from "./rulerBuilder";
+import { updateToolMetadata } from "./updateToolMetadata";
 
 type TimeStampedInteractionManager = {
   initTime: number;
@@ -28,8 +34,19 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
   let interactions: TimeStampedInteractionManager[] = [];
   let currentRulerInitTime = 0;
 
+  const endUnusedInteractions = () => {
+    const newItemInteractions: TimeStampedInteractionManager[] = [];
+    for (let i = 0; i < interactions.length; i++) {
+      if (currentRulerInitTime !== interactions[i].initTime) {
+        interactions[i].manager[1]();
+      } else {
+        newItemInteractions.push(interactions[i]);
+      }
+    }
+    interactions = newItemInteractions;
+  };
+
   // State that doesn't require extra handling
-  let interactionType: undefined | "DRAG" | "CLICK" = undefined;
   let initialInteractedItem: Item | null = null;
   let sharedAttachments: Item[] = [];
   let localAttachments: Item[] = [];
@@ -42,18 +59,6 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     line: getItemId("line", player.id),
     label: getItemId("label", player.id),
     endDot: getItemId("end-point", player.id),
-  };
-
-  const endUnusedInteractions = () => {
-    const newItemInteractions: TimeStampedInteractionManager[] = [];
-    for (let i = 0; i < interactions.length; i++) {
-      if (currentRulerInitTime !== interactions[i].initTime) {
-        interactions[i].manager[1]();
-      } else {
-        newItemInteractions.push(interactions[i]);
-      }
-    }
-    interactions = newItemInteractions;
   };
 
   const createRulerInteractions = async (event: ToolEvent) => {
@@ -182,6 +187,81 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     endUnusedInteractions();
   };
 
+  const addSegment = async (position?: Vector2) => {
+    position ?? pointerPosition;
+    rulerPoints.push(
+      await calculateSegmentEndPosition(
+        grid,
+        rulerPoints[rulerPoints.length - 1],
+        pointerPosition,
+      ),
+    );
+    if (rulerPoints.length >= 2) updateToolMetadata({ points: "MULTIPLE" });
+  };
+
+  const removeSegment = async () => {
+    if (rulerPoints.length <= 1) return;
+
+    // Remove most recent segment
+    rulerPoints.pop();
+    // Refresh with segment removed
+    pointerPosition = rulerPoints[rulerPoints.length - 1];
+    await updateToolItems();
+    updateToolItems(true);
+
+    if (rulerPoints.length === 1) updateToolMetadata({ points: "ONE" });
+  };
+
+  const addRulerToScene = (items: Item[]) => {
+    const ruler: Item[] = [];
+    let addItemsToScene = true;
+    for (let rulerId of Object.values(rulerIds)) {
+      for (let item of items) {
+        if (
+          item.id === rulerIds.label &&
+          isLabel(item) &&
+          item.text.plainText.startsWith("0")
+        ) {
+          addItemsToScene = false;
+        }
+        if (item.id === rulerId) {
+          ruler.push(item);
+          break;
+        }
+      }
+    }
+    if (addItemsToScene) OBR.scene.items.addItems(ruler);
+  };
+
+  const cleanupRuler = () => {
+    currentRulerInitTime = 0;
+    endUnusedInteractions();
+    updateToolMetadata({ measuring: false, points: "NONE" });
+  };
+
+  OBR.broadcast.onMessage(RULER_MESSAGE_CHANNEL, async (event) => {
+    if (interactions.length === 0) return;
+
+    if (event.data === "CONFIRM") {
+      const items = await buildRuler(
+        rulerIds,
+        grid,
+        player,
+        rulerPoints,
+        true,
+        true,
+      );
+      await updateInteractionTargetItems(rulerPoints[rulerPoints.length - 1]);
+      addRulerToScene(items);
+      cleanupRuler();
+    } else if (event.data === "UNDO") {
+      removeSegment();
+    } else if (event.data === "CANCEL") {
+      await updateInteractionTargetItems(rulerPoints[0]);
+      cleanupRuler();
+    }
+  });
+
   OBR.tool.createMode({
     id: DRAG_MEASURE_MODE_ID,
     icons: [
@@ -195,162 +275,70 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     ],
     cursors: [
       {
-        cursor: "grab",
+        cursor: "crosshair",
+        filter: {
+          metadata: [{ key: "measuring", value: true, operator: "==" }],
+        },
+      },
+      {
+        cursor: "pointer",
         filter: {
           target: [
             { key: "locked", value: true, operator: "!=" },
             { key: "image", value: undefined, operator: "!=" },
           ],
+          permissions: ["CHARACTER_UPDATE"],
         },
       },
-      { cursor: "crosshair" },
+      { cursor: "move" },
     ],
-    onToolDragStart: async (_, event) => {
-      if (interactionType === undefined) {
-        interactionType = "DRAG";
-        createRulerInteractions(event);
-      }
+    preventDrag: {
+      target: [{ key: "locked", value: true }],
+      metadata: [{ key: "measuring", value: false }],
     },
     onToolClick: async (_, event) => {
-      if (interactions.length === 0 && interactionType === undefined) {
-        interactionType = "CLICK";
+      if (interactions.length === 0) {
         createRulerInteractions(event);
-      } else if (interactionType === "CLICK") {
-        rulerPoints.push(
-          await calculateSegmentEndPosition(
-            grid,
-            rulerPoints[rulerPoints.length - 1],
-            pointerPosition,
-          ),
-        );
+        updateToolMetadata({ measuring: true, points: "ONE" });
+      } else {
+        addSegment(event.target?.position);
       }
     },
     onToolMove: (_, event) => {
       if (interactions.length === 0) return;
       pointerPosition = event.pointerPosition;
       updateToolItems();
-      // OBR.player.deselect();
     },
     onKeyDown: async (_, event) => {
-      if (!interactions) return;
+      if (interactions.length === 0) return;
 
-      if (event.key.toLowerCase() === "z") {
-        // Add segment
-        rulerPoints.push(
-          await calculateSegmentEndPosition(
-            grid,
-            rulerPoints[rulerPoints.length - 1],
-            pointerPosition,
-          ),
-        );
-      }
-
-      if (event.key.toLowerCase() === "x" && rulerPoints.length > 1) {
-        // Remove most recent segment
-        rulerPoints.pop();
-        // Refresh with segment removed
-        updateToolItems(true);
-      }
+      if (event.key === "Delete") removeSegment();
+      if (event.key === "Backspace") removeSegment();
 
       if (event.key === "Escape") {
-        // Fix bug where token is not locally displayed at its initial position on cancel
-        const manager = interactions.find(
-          (value) => value.initTime === currentRulerInitTime,
-        )?.manager;
-
-        if (manager) {
-          manager[0]((items) => {
-            items.forEach((item) => {
-              if (initialInteractedItem && item.id === initialInteractedItem.id)
-                item.position = initialInteractedItem.position;
-            });
-          });
-        }
-
-        currentRulerInitTime = 0;
-        interactionType = undefined;
-        endUnusedInteractions();
+        await updateInteractionTargetItems(rulerPoints[0]);
+        cleanupRuler();
       }
+    },
+    onToolDragEnd(_, event) {
+      if (interactions.length === 0) return;
+      addSegment(event.target?.position);
     },
     onToolDoubleClick: async (_, event) => {
-      if (interactionType !== "CLICK") return;
+      if (interactions.length === 0) return;
       // Run final update
       const items = await updateToolItems();
       await updateInteractionTargetItems(event.pointerPosition);
 
       // Add ruler to the scene
-      const ruler: Item[] = [];
-      let addItemsToScene = true;
-      for (let rulerId of Object.values(rulerIds)) {
-        for (let item of items) {
-          if (
-            item.id === rulerIds.label &&
-            isLabel(item) &&
-            item.text.plainText.startsWith("0")
-          ) {
-            addItemsToScene = false;
-          }
-          if (item.id === rulerId) {
-            ruler.push(item);
-            break;
-          }
-        }
-      }
-      if (addItemsToScene) OBR.scene.items.addItems(ruler);
+      addRulerToScene(items);
 
-      currentRulerInitTime = 0;
-      interactionType = undefined;
-      endUnusedInteractions();
+      cleanupRuler();
     },
-    onToolDragEnd: async (_, event) => {
-      if (interactionType !== "DRAG") return;
-      // Run final update
-      const items = await updateToolItems();
-      await updateInteractionTargetItems(event.pointerPosition);
-
-      // Add ruler to the scene
-      const ruler: Item[] = [];
-      let addItemsToScene = true;
-      for (let rulerId of Object.values(rulerIds)) {
-        for (let item of items) {
-          if (
-            item.id === rulerIds.label &&
-            isLabel(item) &&
-            item.text.plainText.startsWith("0")
-          ) {
-            addItemsToScene = false;
-          }
-          if (item.id === rulerId) {
-            ruler.push(item);
-            break;
-          }
-        }
-      }
-      if (addItemsToScene) OBR.scene.items.addItems(ruler);
-
-      currentRulerInitTime = 0;
-      interactionType = undefined;
-      endUnusedInteractions();
-    },
-    onToolDragCancel: () => {
-      if (interactionType !== "DRAG") return;
-      // Fix bug where token is not locally displayed at its initial position on cancel
-      const manager = interactions.find(
-        (value) => value.initTime === currentRulerInitTime,
-      )?.manager;
-
-      if (manager) {
-        manager[0]((items) => {
-          items.forEach((item) => {
-            if (initialInteractedItem && item.id === initialInteractedItem.id)
-              item.position = initialInteractedItem.position;
-          });
-        });
-      }
-
-      currentRulerInitTime = 0;
-      interactionType = undefined;
-      endUnusedInteractions();
+    onDeactivate: async () => {
+      if (interactions.length === 0) return;
+      await updateInteractionTargetItems(rulerPoints[0]);
+      cleanupRuler();
     },
   });
 
