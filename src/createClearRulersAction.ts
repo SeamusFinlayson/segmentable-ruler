@@ -1,10 +1,5 @@
 import OBR from "@owlbear-rodeo/sdk";
-import {
-  CREATED_BY_METADATA_ID,
-  getPluginId,
-  RULER_MESSAGE_CHANNEL,
-  TOOL_ID,
-} from "./idStrings";
+import { getPluginId, RULER_MESSAGE_CHANNEL, TOOL_ID } from "./idStrings";
 import { checkIcon, deleteActionIcon, undoIcon, xIcon } from "./icons";
 import { clearRulerItems } from "./clearRulerItems";
 
