@@ -8,6 +8,7 @@ import {
 import { getLabelPosition, calculateDisplayDistance } from "./mathHelpers";
 import { Grid, Player, RulerIds } from "./types";
 import parse from "color-parse";
+import { CREATED_BY_METADATA_ID } from "./idStrings";
 
 export async function buildRuler(
   rulerIds: RulerIds,
@@ -32,6 +33,7 @@ export async function buildRuler(
       .visible(visible)
       .layer("RULER")
       .zIndex(10002)
+      .metadata({ [CREATED_BY_METADATA_ID]: player.id })
       .build(),
   );
 
@@ -48,6 +50,7 @@ export async function buildRuler(
       .layer("RULER")
       .zIndex(10004)
       .disableHit(true)
+      .metadata({ [CREATED_BY_METADATA_ID]: player.id })
       .build(),
   );
 
@@ -67,6 +70,7 @@ export async function buildRuler(
         .height(grid.dpi / 4)
         .zIndex(10001)
         .disableHit(true)
+        .metadata({ [CREATED_BY_METADATA_ID]: player.id })
         .build(),
     );
   }
@@ -86,6 +90,7 @@ export async function buildRuler(
         .layer("RULER")
         .zIndex(10000)
         .disableHit(true)
+        .metadata({ [CREATED_BY_METADATA_ID]: player.id })
         .build(),
     );
   }

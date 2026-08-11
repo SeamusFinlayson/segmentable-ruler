@@ -1,12 +1,12 @@
 import OBR from "@owlbear-rodeo/sdk";
 import {
-  getItemId,
+  CREATED_BY_METADATA_ID,
   getPluginId,
   RULER_MESSAGE_CHANNEL,
-  SHORT_ID_PREFIX,
   TOOL_ID,
 } from "./idStrings";
 import { checkIcon, deleteActionIcon, undoIcon, xIcon } from "./icons";
+import { clearRulerItems } from "./clearRulerItems";
 
 export function createRulerActions() {
   OBR.tool.createAction({
@@ -22,16 +22,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: async () => {
-      const items = await OBR.scene.items.getItems(
-        (item) => item.layer === "RULER",
-      );
-      const deleteList: string[] = [];
-      for (let item of items) {
-        if (item.id.startsWith(SHORT_ID_PREFIX, 0)) deleteList.push(item.id);
-      }
-      OBR.scene.items.deleteItems(deleteList);
-    },
+    onClick: () => clearRulerItems("ALL"),
   });
 
   OBR.tool.createAction({
@@ -47,23 +38,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: async () => {
-      const items = await OBR.scene.items.getItems(
-        (item) => item.layer === "RULER",
-      );
-      const deleteList: string[] = [];
-      const playerId = await OBR.player.getId();
-      //todo: should probably use metadata for this
-      for (let item of items) {
-        if (item.id === getItemId("line", playerId)) deleteList.push(item.id);
-        if (item.id === getItemId("label", playerId)) deleteList.push(item.id);
-        if (item.id === getItemId("end-point", playerId))
-          deleteList.push(item.id);
-        if (item.id === getItemId("background", playerId))
-          deleteList.push(item.id);
-      }
-      OBR.scene.items.deleteItems(deleteList);
-    },
+    onClick: () => clearRulerItems("PLAYER"),
   });
 
   OBR.tool.createAction({

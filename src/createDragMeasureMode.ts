@@ -24,6 +24,7 @@ import {
 import { Grid, Player, RulerIds } from "./types";
 import { buildRuler } from "./rulerBuilder";
 import { updateToolMetadata } from "./updateToolMetadata";
+import { clearRulerItems } from "./clearRulerItems";
 
 type TimeStampedInteractionManager = {
   initTime: number;
@@ -336,6 +337,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
       cleanupRuler();
     },
     onDeactivate: async () => {
+      clearRulerItems("PLAYER");
       if (interactions.length === 0) return;
       await updateInteractionTargetItems(rulerPoints[0]);
       cleanupRuler();
