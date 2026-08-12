@@ -59,6 +59,7 @@ export async function buildRuler(
       buildShape()
         .id(rulerIds.endDot)
         .attachedTo(rulerIds.line)
+        .visible(visible)
         .layer("RULER")
         .position(points[points.length - 1])
         .shapeType("CIRCLE")
