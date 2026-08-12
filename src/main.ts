@@ -2,10 +2,10 @@ import OBR from "@owlbear-rodeo/sdk";
 import { createGrid } from "./types";
 import { Grid } from "./types";
 import { Player } from "./types";
-import { createRulerActions } from "./createClearRulersAction";
-import { createDragMeasureMode } from "./createDragMeasureMode";
+import { createRulerActions } from "./createRulerActions";
+import { createSharedRulerMode } from "./createSharedRulerMode";
 import { createSegmentableRulerTool } from "./createSegmentableRulerTool";
-import { createPrivateDragMeasureMode } from "./createPrivateDragMeasureMode";
+import { createPrivateDragMeasureMode } from "./createPrivateRulerMode";
 
 OBR.onReady(async () => {
   printVersionToConsole();
@@ -56,7 +56,7 @@ async function start() {
 
   const player: Player = { id: playerId, color: playerColor, role: playerRole };
 
-  createDragMeasureMode(grid, player);
+  createSharedRulerMode(grid, player);
   createPrivateDragMeasureMode(grid, player);
   startCallbacks(grid, player);
 }

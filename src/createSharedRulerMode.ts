@@ -31,7 +31,7 @@ type TimeStampedInteractionManager = {
   manager: InteractionManager<Item[]>;
 };
 
-export function createDragMeasureMode(grid: Grid, player: Player) {
+export function createSharedRulerMode(grid: Grid, player: Player) {
   let interactions: TimeStampedInteractionManager[] = [];
   let currentRulerInitTime = 0;
 

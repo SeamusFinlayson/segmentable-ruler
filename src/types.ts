@@ -52,3 +52,8 @@ export interface RulerIds {
   label: string;
   endDot: string;
 }
+
+export type ToolMetadata = {
+  measuring: boolean;
+  points: "NONE" | "ONE" | "MULTIPLE";
+};
