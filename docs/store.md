@@ -18,35 +18,24 @@ _A ruler for measuring segmented paths_
 
 **Setup**
 
-- Install the extension
-- Make sure the extension is enabled in the room in which you wish to use it
-- Select the Segmentable Ruler tool in the toolbar or use the shortcut **Z**
+1. Install the extension
+2. Make sure the extension is enabled in the room in which you wish to use it
+3. Select the Segmentable Ruler tool in the toolbar or use the shortcut **Z**
 
 **Making a measurement**
 
-- Drag a token or select a place on the map to make a measurement
-- Press **Z** to start a new segment
-- Press **X** to remove the last segment
+- Click a token to begin measuring
+- Click spots on the map to add ruler segments
+- Hit Backspace, Delete, or the Remove Segment button at the top of your screen to remove a segment
+- Double click on the map, press Enter, or click the Confirm button at the top of your screen to finish a measurement
 
-**Finishing a measurement**
+**Clearing rulers**
 
-- Press **escape** to cancel the measurement and return the token to its initial position
-- Release the token or press **enter** to make the ruler permanent and move the token to the current position
+- A player's ruler is automatically cleared when the switch to a differen tool
+- You can manually clear your ruler by clicking the trash icon at the top of your screen, when a palyer with GM access clicks this button it will clear all rulers, not just their own
 
-**Making a private measurement**
+## Features
 
-Other GMs and players are not shown your ruler and it is labeled as private. Private rulers cannot be made permanent or be used to move tokens.
-
-- Select the **Private Ruler** from the bar at the top of your screen
-- Use the same controls as you would for a normal measurement
-
-**Clear rulers**
-
-The trash can icon labeled **Clear Rulers** will clear all permanent rulers that you and other users have added to the scene. This button is only shown for users with GM access.
-
-## Benefits
-
-- Snaps tokens to grid based on token position instead of pointer position
 - Allows for complex paths with many segments to be measured
 - Easy to create new segments and remove unwanted segments
 - Works with all grid and measurement types
