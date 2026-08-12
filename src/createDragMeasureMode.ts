@@ -8,7 +8,7 @@ import OBR, {
   isLabel,
   ToolEvent,
 } from "@owlbear-rodeo/sdk";
-import { toolIcon } from "./icons";
+import { sharedRulerIcon } from "./icons";
 import {
   snapPosition,
   calculateSegmentEndPosition,
@@ -267,8 +267,8 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     id: DRAG_MEASURE_MODE_ID,
     icons: [
       {
-        icon: toolIcon,
-        label: "Ruler",
+        icon: sharedRulerIcon,
+        label: "Public Ruler",
         filter: {
           activeTools: [TOOL_ID],
         },
