@@ -3,10 +3,10 @@ title: Segmentable Ruler
 description: A ruler for measuring segmented paths
 author: Seamus Finlayson
 image: https://segmentable-ruler.seamus-finlayson.ca/header.webp
-icon: https://owlbear-measure.onrender.com/logo.svg
+icon: https://segmentable-ruler.seamus-finlayson.ca/logo.svg
 tags:
   - tool
-manifest: https://owlbear-measure.onrender.com/manifest.json
+manifest: https://segmentable-ruler.seamus-finlayson.ca/manifest.json
 learn-more: https://github.com/SeamusFinlayson/owlbear-measure
 ---
 
@@ -41,7 +41,7 @@ _A ruler for measuring segmented paths_
 - Works with all grid and measurement types
 - Hides measurements for hidden tokens
 - Allows you to make measurements privately
-- Holding shift while starting a measurement prevent tokens from being moved
+- Holding ctrl while starting a measurement prevent tokens from being moved
 
 ## Limitations
 

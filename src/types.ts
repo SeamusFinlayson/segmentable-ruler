@@ -55,5 +55,6 @@ export interface RulerIds {
 
 export type ToolMetadata = {
   measuring: boolean;
+  ctrlPressed: boolean;
   points: "NONE" | "ONE" | "MULTIPLE";
 };

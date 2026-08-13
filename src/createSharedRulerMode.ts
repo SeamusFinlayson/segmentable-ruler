@@ -70,7 +70,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
     let interaction: InteractionManager<Item[]>;
 
     const token = event.target;
-    if (token && isImage(token) && !token.locked && !event.shiftKey) {
+    if (token && isImage(token) && !token.locked && !event.ctrlKey) {
       initialInteractedItem = token;
       const startPosition = await snapPosition(grid, token.position);
       lastPosition = startPosition;
@@ -288,6 +288,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
             { key: "locked", value: true, operator: "!=" },
             { key: "image", value: undefined, operator: "!=" },
           ],
+          metadata: [{ key: "ctrlPressed", value: true, operator: "!=" }],
           permissions: ["CHARACTER_UPDATE"],
         },
       },
@@ -306,6 +307,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
       }
     },
     onToolMove: (_, event) => {
+      updateToolMetadata({ ctrlPressed: event.ctrlKey });
       if (interactions.length === 0) return;
       pointerPosition = event.pointerPosition;
       updateToolItems();
