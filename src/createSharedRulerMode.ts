@@ -70,7 +70,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
     let interaction: InteractionManager<Item[]>;
 
     const token = event.target;
-    if (token && isImage(token) && !token.locked) {
+    if (token && isImage(token) && !token.locked && !event.shiftKey) {
       initialInteractedItem = token;
       const startPosition = await snapPosition(grid, token.position);
       lastPosition = startPosition;

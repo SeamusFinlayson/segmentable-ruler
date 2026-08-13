@@ -41,6 +41,7 @@ _A ruler for measuring segmented paths_
 - Works with all grid and measurement types
 - Hides measurements for hidden tokens
 - Allows you to make measurements privately
+- Holding shift while starting a measurement prevent tokens from being moved
 
 ## Limitations
 

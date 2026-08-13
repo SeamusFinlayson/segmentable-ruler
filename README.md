@@ -33,6 +33,7 @@ Install link: [https://segmentable-ruler.seamus-finlayson.ca/manifest.json](http
 - Works with all grid and measurement types
 - Hides measurements for hidden tokens
 - Allows you to make measurements privately
+- Holding shift while starting a measurement prevent tokens from being moved
 
 ## Feature Requests
 
