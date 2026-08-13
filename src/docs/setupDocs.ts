@@ -2,7 +2,7 @@ import readme from "../../README.md?raw";
 import showdown from "showdown";
 import "./docs.css";
 
-const converter = new showdown.Converter(),
+const converter = new showdown.Converter({ openLinksInNewWindow: true }),
   html = converter.makeHtml(readme);
 
 const element = document.getElementById("app");
