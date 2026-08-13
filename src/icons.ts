@@ -26,3 +26,7 @@ export const xIcon = new URL(
   "./assets/xIcon.svg#icon",
   import.meta.url,
 ).toString();
+export const questionMarkIcon = new URL(
+  "./assets/questionMarkIcon.svg#icon",
+  import.meta.url,
+).toString();

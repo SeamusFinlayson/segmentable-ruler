@@ -2,7 +2,7 @@
 title: Segmentable Ruler
 description: A ruler for measuring segmented paths
 author: Seamus Finlayson
-image: https://github.com/SeamusFinlayson/owlbear-measure/assets/77430559/aeef3835-ac5f-4497-af0c-e8c54bc17cdd
+image: https://segmentable-ruler.seamus-finlayson.ca/header.webp
 icon: https://owlbear-measure.onrender.com/logo.svg
 tags:
   - tool
@@ -24,7 +24,7 @@ _A ruler for measuring segmented paths_
 
 **Making a measurement**
 
-- To begin measuring, click a token
+- To begin measuring, click a token or an empty spot on the map
 - To add ruler segments, click spots on the map
 - To remove a segment, press Backspace, Delete, or the Remove Segment button at the top of your screen
 - To finish a measurement, double click on the map, press Enter, or press the Confirm button at the top of your screen

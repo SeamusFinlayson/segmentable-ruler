@@ -1,6 +1,12 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { getPluginId, RULER_MESSAGE_CHANNEL, TOOL_ID } from "./idStrings";
-import { checkIcon, trashIcon, undoIcon, xIcon } from "./icons";
+import {
+  checkIcon,
+  questionMarkIcon,
+  trashIcon,
+  undoIcon,
+  xIcon,
+} from "./icons";
 import { clearRulerItems } from "./clearRulerItems";
 
 export function createRulerActions() {
@@ -34,6 +40,27 @@ export function createRulerActions() {
       },
     ],
     onClick: () => clearRulerItems("PLAYER"),
+  });
+
+  OBR.tool.createAction({
+    id: getPluginId("help"),
+    icons: [
+      {
+        icon: questionMarkIcon,
+        label: "Help",
+        filter: {
+          activeTools: [TOOL_ID],
+          metadata: [{ key: "measuring", value: false }],
+        },
+      },
+    ],
+    onClick: () =>
+      OBR.modal.open({
+        id: getPluginId("help-popover"),
+        height: 800,
+        width: 600,
+        url: "/docs.html",
+      }),
   });
 
   OBR.tool.createAction({

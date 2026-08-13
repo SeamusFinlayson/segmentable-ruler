@@ -14,7 +14,13 @@ importers:
       color-parse:
         specifier: ^2.0.2
         version: 2.0.2
+      showdown:
+        specifier: ^2.1.0
+        version: 2.1.0
     devDependencies:
+      '@types/showdown':
+        specifier: ^2.0.6
+        version: 2.0.6
       prettier:
         specifier: 3.9.6
         version: 3.9.6
@@ -260,12 +266,19 @@ packages:
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
 
+  '@types/showdown@2.0.6':
+    resolution: {integrity: sha512-pTvD/0CIeqe4x23+YJWlX2gArHa8G0J0Oh6GKaVXV7TAeickpkkZiNOgFcFcmLQ5lB/K0qBJL1FtRYltBfbGCQ==}
+
   color-name@2.0.0:
     resolution: {integrity: sha512-SbtvAMWvASO5TE2QP07jHBMXKafgdZz8Vrsrn96fiL+O92/FN/PLARzUW5sKt013fjAprK2d2iCn2hk2Xb5oow==}
     engines: {node: '>=12.20'}
 
   color-parse@2.0.2:
     resolution: {integrity: sha512-eCtOz5w5ttWIUcaKLiktF+DxZO1R9KLNY/xhbV6CkhM7sR3GhVghmt6X6yOnzeaM24po+Z9/S1apbXMwA3Iepw==}
+
+  commander@9.5.0:
+    resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
+    engines: {node: ^12.20.0 || >=14}
 
   esbuild@0.20.2:
     resolution: {integrity: sha512-WdOOppmUNU+IbZ0PaDiTst80zjnrOkyJNHoKupIcVyU8Lvla3Ugx94VzkQ32Ijqd7UhHJy75gNWDMUekcrSJ6g==}
@@ -307,6 +320,10 @@ packages:
   rollup@4.17.2:
     resolution: {integrity: sha512-/9ClTJPByC0U4zNLowV1tMBe8yMEAxewtR3cUNX5BoEpGH3dQEWpJLr6CLp0fPdYRF/fzVOgvDb1zXuakwF5kQ==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
+    hasBin: true
+
+  showdown@2.1.0:
+    resolution: {integrity: sha512-/6NVYu4U819R2pUIk79n67SYgJHWCce0a5xTP979WbNp0FL9MN1I1QK662IDU1b6JzKTvmhgI7T7JYIxBi3kMQ==}
     hasBin: true
 
   source-map-js@1.2.0:
@@ -478,11 +495,15 @@ snapshots:
 
   '@types/estree@1.0.5': {}
 
+  '@types/showdown@2.0.6': {}
+
   color-name@2.0.0: {}
 
   color-parse@2.0.2:
     dependencies:
       color-name: 2.0.0
+
+  commander@9.5.0: {}
 
   esbuild@0.20.2:
     optionalDependencies:
@@ -552,6 +573,10 @@ snapshots:
       '@rollup/rollup-win32-ia32-msvc': 4.17.2
       '@rollup/rollup-win32-x64-msvc': 4.17.2
       fsevents: 2.3.3
+
+  showdown@2.1.0:
+    dependencies:
+      commander: 9.5.0
 
   source-map-js@1.2.0: {}
 
