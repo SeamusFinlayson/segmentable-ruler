@@ -16,15 +16,15 @@ Install link: https://owlbear-measure.onrender.com/manifest.json
 
 **Making a measurement**
 
-- Click a token to begin measuring
-- Click spots on the map to add ruler segments
-- Hit Backspace, Delete, or the Remove Segment button at the top of your screen to remove a segment
-- Double click on the map, press Enter, or click the Confirm button at the top of your screen to finish a measurement
+- To begin measuring, click a token
+- To add ruler segments, click spots on the map
+- To remove a segment, press Backspace, Delete, or the Remove Segment button at the top of your screen
+- To finish a measurement, double click on the map, press Enter, or press the Confirm button at the top of your screen
 
 **Clearing rulers**
 
-- A player's ruler is automatically cleared when the switch to a differen tool
-- You can manually clear your ruler by clicking the trash icon at the top of your screen, when a palyer with GM access clicks this button it will clear all rulers, not just their own
+- A player's ruler is automatically cleared when the switch to a different tool
+- You can manually clear your ruler by clicking the trash icon at the top of your screen. When a player with GM access clicks this button, it will clear all rulers, not just their own
 
 ## Features
 
