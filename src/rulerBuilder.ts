@@ -8,6 +8,7 @@ import {
 import { getLabelPosition, calculateDisplayDistance } from "./mathHelpers";
 import { Grid, Player, RulerIds } from "./types";
 import parse from "color-parse";
+import { CREATED_BY_METADATA_ID } from "./idStrings";
 
 export async function buildRuler(
   rulerIds: RulerIds,
@@ -15,7 +16,7 @@ export async function buildRuler(
   player: Player,
   points: Vector2[],
   visible: boolean,
-  endDot: boolean
+  endDot: boolean,
 ): Promise<Item[]> {
   const rulerConstituentItems: any[] = [];
 
@@ -32,7 +33,8 @@ export async function buildRuler(
       .visible(visible)
       .layer("RULER")
       .zIndex(10002)
-      .build()
+      .metadata({ [CREATED_BY_METADATA_ID]: player.id })
+      .build(),
   );
 
   rulerConstituentItems.push(
@@ -48,7 +50,8 @@ export async function buildRuler(
       .layer("RULER")
       .zIndex(10004)
       .disableHit(true)
-      .build()
+      .metadata({ [CREATED_BY_METADATA_ID]: player.id })
+      .build(),
   );
 
   if (endDot) {
@@ -56,6 +59,7 @@ export async function buildRuler(
       buildShape()
         .id(rulerIds.endDot)
         .attachedTo(rulerIds.line)
+        .visible(visible)
         .layer("RULER")
         .position(points[points.length - 1])
         .shapeType("CIRCLE")
@@ -67,7 +71,8 @@ export async function buildRuler(
         .height(grid.dpi / 4)
         .zIndex(10001)
         .disableHit(true)
-        .build()
+        .metadata({ [CREATED_BY_METADATA_ID]: player.id })
+        .build(),
     );
   }
 
@@ -86,7 +91,8 @@ export async function buildRuler(
         .layer("RULER")
         .zIndex(10000)
         .disableHit(true)
-        .build()
+        .metadata({ [CREATED_BY_METADATA_ID]: player.id })
+        .build(),
     );
   }
 

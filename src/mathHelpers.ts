@@ -3,7 +3,7 @@ import { Grid } from "./types";
 
 export async function calculateDisplayDistance(
   grid: Grid,
-  points: Vector2[]
+  points: Vector2[],
 ): Promise<string> {
   let distance = 0;
   let scaledDistance = 0;
@@ -12,7 +12,7 @@ export async function calculateDisplayDistance(
       for (let i = 1; i < points.length; i++) {
         distance += Math.max(
           Math.abs(Math.round((points[i].x - points[i - 1].x) / grid.dpi)),
-          Math.abs(Math.round((points[i].y - points[i - 1].y) / grid.dpi))
+          Math.abs(Math.round((points[i].y - points[i - 1].y) / grid.dpi)),
         );
       }
       scaledDistance = distance * grid.scale.parsed.multiplier;
@@ -20,10 +20,10 @@ export async function calculateDisplayDistance(
       let diagonalsCount = 0;
       for (let i = 1; i < points.length; i++) {
         const vertical = Math.abs(
-          Math.round((points[i].y - points[i - 1].y) / grid.dpi)
+          Math.round((points[i].y - points[i - 1].y) / grid.dpi),
         );
         const horizontal = Math.abs(
-          Math.round((points[i].x - points[i - 1].x) / grid.dpi)
+          Math.round((points[i].x - points[i - 1].x) / grid.dpi),
         );
         const longEdge = Math.max(vertical, horizontal);
         const shortEdge = Math.min(vertical, horizontal);
@@ -48,10 +48,10 @@ export async function calculateDisplayDistance(
       // grid.measurement is MANHATTAN
       for (let i = 1; i < points.length; i++) {
         const vertical = Math.abs(
-          Math.round((points[i].y - points[i - 1].y) / grid.dpi)
+          Math.round((points[i].y - points[i - 1].y) / grid.dpi),
         );
         const horizontal = Math.abs(
-          Math.round((points[i].x - points[i - 1].x) / grid.dpi)
+          Math.round((points[i].x - points[i - 1].x) / grid.dpi),
         );
         distance += vertical + horizontal;
       }
@@ -61,14 +61,14 @@ export async function calculateDisplayDistance(
     const getDistances: Promise<number>[] = [];
     for (let i = 1; i < points.length; i++) {
       getDistances.push(
-        new Promise(resolve => {
+        new Promise((resolve) => {
           resolve(OBR.scene.grid.getDistance(points[i], points[i - 1]));
-        })
+        }),
       );
     }
     const distances = await Promise.all(getDistances);
     let totalDistance = 0;
-    distances.forEach(distance => {
+    distances.forEach((distance) => {
       totalDistance += distance;
     });
 
@@ -91,7 +91,7 @@ export async function calculateDisplayDistance(
 export async function calculateSegmentEndPosition(
   grid: Grid,
   startPosition: Vector2,
-  pointerPosition: Vector2
+  pointerPosition: Vector2,
 ): Promise<Vector2> {
   if (grid.type === "SQUARE") {
     return {
@@ -111,7 +111,7 @@ export async function calculateSegmentEndPosition(
 
 export async function snapPosition(
   grid: Grid,
-  position: Vector2
+  position: Vector2,
 ): Promise<Vector2> {
   if (grid.type === "SQUARE") {
     const nearestVertex = {
@@ -145,7 +145,7 @@ function distance(point1: Vector2, point2: Vector2): number {
 
 export function getLabelPosition(
   grid: Grid,
-  rulerEndPosition: Vector2
+  rulerEndPosition: Vector2,
 ): Vector2 {
   return {
     x: rulerEndPosition.x,

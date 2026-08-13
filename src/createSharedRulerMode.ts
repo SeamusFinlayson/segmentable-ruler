@@ -8,25 +8,44 @@ import OBR, {
   isLabel,
   ToolEvent,
 } from "@owlbear-rodeo/sdk";
-import { toolIcon } from "./icons";
+import { sharedRulerIcon } from "./icons";
 import {
   snapPosition,
   calculateSegmentEndPosition,
   calculateDisplayDistance,
   getLabelPosition,
 } from "./mathHelpers";
-import { DRAG_MEASURE_MODE_ID, getItemId, TOOL_ID } from "./idStrings";
+import {
+  DRAG_MEASURE_MODE_ID,
+  getItemId,
+  RULER_MESSAGE_CHANNEL,
+  TOOL_ID,
+} from "./idStrings";
 import { Grid, Player, RulerIds } from "./types";
 import { buildRuler } from "./rulerBuilder";
+import { updateToolMetadata } from "./updateToolMetadata";
+import { clearRulerItems } from "./clearRulerItems";
 
 type TimeStampedInteractionManager = {
   initTime: number;
   manager: InteractionManager<Item[]>;
 };
 
-export function createDragMeasureMode(grid: Grid, player: Player) {
+export function createSharedRulerMode(grid: Grid, player: Player) {
   let interactions: TimeStampedInteractionManager[] = [];
   let currentRulerInitTime = 0;
+
+  const endUnusedInteractions = () => {
+    const newItemInteractions: TimeStampedInteractionManager[] = [];
+    for (let i = 0; i < interactions.length; i++) {
+      if (currentRulerInitTime !== interactions[i].initTime) {
+        interactions[i].manager[1]();
+      } else {
+        newItemInteractions.push(interactions[i]);
+      }
+    }
+    interactions = newItemInteractions;
+  };
 
   // State that doesn't require extra handling
   let initialInteractedItem: Item | null = null;
@@ -43,18 +62,6 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     endDot: getItemId("end-point", player.id),
   };
 
-  const endUnusedInteractions = () => {
-    const newItemInteractions: TimeStampedInteractionManager[] = [];
-    for (let i = 0; i < interactions.length; i++) {
-      if (currentRulerInitTime !== interactions[i].initTime) {
-        interactions[i].manager[1]();
-      } else {
-        newItemInteractions.push(interactions[i]);
-      }
-    }
-    interactions = newItemInteractions;
-  };
-
   const createRulerInteractions = async (event: ToolEvent) => {
     const interactionStartTime = Date.now();
     currentRulerInitTime = interactionStartTime;
@@ -63,7 +70,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     let interaction: InteractionManager<Item[]>;
 
     const token = event.target;
-    if (token && isImage(token) && !token.locked) {
+    if (token && isImage(token) && !token.locked && !event.ctrlKey) {
       initialInteractedItem = token;
       const startPosition = await snapPosition(grid, token.position);
       lastPosition = startPosition;
@@ -78,7 +85,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
             player,
             [startPosition, await snapPosition(grid, pointerPosition)],
             token.visible,
-            true
+            true,
           )),
           token,
         ]),
@@ -100,8 +107,8 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
             player,
             [startPosition, pointerPosition],
             true,
-            true
-          )
+            true,
+          ),
         ),
       ]);
     }
@@ -127,7 +134,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
       const endPointPosition = await calculateSegmentEndPosition(
         grid,
         rulerPoints[rulerPoints.length - 1],
-        pointerPosition
+        pointerPosition,
       );
       if (initialInteractedItem !== null) {
         const endPointItem = { ...initialInteractedItem };
@@ -141,7 +148,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
                 player,
                 [...rulerPoints, endPointPosition],
                 endPointItem.visible,
-                true
+                true,
               )),
               endPointItem,
             ]),
@@ -157,8 +164,8 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
               player,
               [...rulerPoints, endPointPosition],
               true,
-              true
-            )
+              true,
+            ),
           ),
         ]);
       }
@@ -181,12 +188,87 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     endUnusedInteractions();
   };
 
+  const addSegment = async (position?: Vector2) => {
+    position ?? pointerPosition;
+    rulerPoints.push(
+      await calculateSegmentEndPosition(
+        grid,
+        rulerPoints[rulerPoints.length - 1],
+        pointerPosition,
+      ),
+    );
+    if (rulerPoints.length >= 2) updateToolMetadata({ points: "MULTIPLE" });
+  };
+
+  const removeSegment = async () => {
+    if (rulerPoints.length <= 1) return;
+
+    // Remove most recent segment
+    rulerPoints.pop();
+    // Refresh with segment removed
+    pointerPosition = rulerPoints[rulerPoints.length - 1];
+    await updateToolItems();
+    updateToolItems(true);
+
+    if (rulerPoints.length === 1) updateToolMetadata({ points: "ONE" });
+  };
+
+  const addRulerToScene = (items: Item[]) => {
+    const ruler: Item[] = [];
+    let addItemsToScene = true;
+    for (let rulerId of Object.values(rulerIds)) {
+      for (let item of items) {
+        if (
+          item.id === rulerIds.label &&
+          isLabel(item) &&
+          item.text.plainText.startsWith("0")
+        ) {
+          addItemsToScene = false;
+        }
+        if (item.id === rulerId) {
+          ruler.push(item);
+          break;
+        }
+      }
+    }
+    if (addItemsToScene) OBR.scene.items.addItems(ruler);
+  };
+
+  const cleanupRuler = () => {
+    currentRulerInitTime = 0;
+    endUnusedInteractions();
+    updateToolMetadata({ measuring: false, points: "NONE" });
+  };
+
+  OBR.broadcast.onMessage(RULER_MESSAGE_CHANNEL, async (event) => {
+    if (interactions.length === 0) return;
+
+    if (event.data === "CONFIRM") {
+      const items = await buildRuler(
+        rulerIds,
+        grid,
+        player,
+        rulerPoints,
+        true,
+        true,
+      );
+      await updateInteractionTargetItems(rulerPoints[rulerPoints.length - 1]);
+      addRulerToScene(items);
+      cleanupRuler();
+    } else if (event.data === "UNDO") {
+      removeSegment();
+    } else if (event.data === "CANCEL") {
+      await updateInteractionTargetItems(rulerPoints[0]);
+      cleanupRuler();
+    }
+  });
+
   OBR.tool.createMode({
     id: DRAG_MEASURE_MODE_ID,
     icons: [
       {
-        icon: toolIcon,
-        label: "Ruler",
+        icon: sharedRulerIcon,
+        label: "Public Ruler",
         filter: {
           activeTools: [TOOL_ID],
         },
@@ -194,113 +276,73 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     ],
     cursors: [
       {
-        cursor: "grab",
+        cursor: "crosshair",
+        filter: {
+          metadata: [{ key: "measuring", value: true, operator: "==" }],
+        },
+      },
+      {
+        cursor: "pointer",
         filter: {
           target: [
             { key: "locked", value: true, operator: "!=" },
             { key: "image", value: undefined, operator: "!=" },
           ],
+          metadata: [{ key: "ctrlPressed", value: true, operator: "!=" }],
+          permissions: ["CHARACTER_UPDATE"],
         },
       },
-      { cursor: "crosshair" },
+      { cursor: "move" },
     ],
-    onToolDragStart: async (_, event) => {
-      createRulerInteractions(event);
+    preventDrag: {
+      target: [{ key: "locked", value: true }],
+      metadata: [{ key: "measuring", value: false }],
     },
-    onToolDragMove: (_, event) => {
-      pointerPosition = event.pointerPosition;
-      updateToolItems();
-      // OBR.player.deselect();
-    },
-    onKeyDown: async (_, event) => {
-      if (interactions || true) {
-        if (event.key === "z" || event.key === "Z") {
-          // Add segment
-          rulerPoints.push(
-            await calculateSegmentEndPosition(
-              grid,
-              rulerPoints[rulerPoints.length - 1],
-              pointerPosition
-            )
-          );
-        }
-
-        if (
-          (event.key === "x" || event.key === "X") &&
-          rulerPoints.length > 1
-        ) {
-          // Remove most recent segment
-          rulerPoints.pop();
-          // Refresh with segment removed
-          updateToolItems(true);
-        }
-
-        if (event.key === "Enter") {
-          // Run final update
-          const items = await updateToolItems();
-          await updateInteractionTargetItems(pointerPosition);
-
-          // Add ruler to the scene
-          const ruler: Item[] = [];
-          for (let rulerId of Object.values(rulerIds)) {
-            for (let item of items) {
-              if (item.id === rulerId) {
-                ruler.push(item);
-                break;
-              }
-            }
-          }
-          OBR.scene.items.addItems(ruler);
-
-          endUnusedInteractions();
-        }
+    onToolClick: async (_, event) => {
+      if (interactions.length === 0) {
+        createRulerInteractions(event);
+        updateToolMetadata({ measuring: true, points: "ONE" });
+      } else {
+        addSegment(event.target?.position);
       }
     },
-    onToolDragEnd: async (_, event) => {
+    onToolMove: (_, event) => {
+      updateToolMetadata({ ctrlPressed: event.ctrlKey });
+      if (interactions.length === 0) return;
+      pointerPosition = event.pointerPosition;
+      updateToolItems();
+    },
+    onKeyDown: async (_, event) => {
+      if (interactions.length === 0) return;
+
+      if (event.key === "Delete") removeSegment();
+      if (event.key === "Backspace") removeSegment();
+
+      if (event.key === "Escape") {
+        await updateInteractionTargetItems(rulerPoints[0]);
+        cleanupRuler();
+      }
+    },
+    onToolDragEnd(_, event) {
+      if (interactions.length === 0) return;
+      addSegment(event.target?.position);
+    },
+    onToolDoubleClick: async (_, event) => {
+      if (interactions.length === 0) return;
       // Run final update
       const items = await updateToolItems();
       await updateInteractionTargetItems(event.pointerPosition);
 
       // Add ruler to the scene
-      const ruler: Item[] = [];
-      let addItemsToScene = true;
-      for (let rulerId of Object.values(rulerIds)) {
-        for (let item of items) {
-          if (
-            item.id === rulerIds.label &&
-            isLabel(item) &&
-            item.text.plainText.startsWith("0")
-          ) {
-            addItemsToScene = false;
-          }
-          if (item.id === rulerId) {
-            ruler.push(item);
-            break;
-          }
-        }
-      }
-      if (addItemsToScene) OBR.scene.items.addItems(ruler);
+      addRulerToScene(items);
 
-      currentRulerInitTime = 0;
-      endUnusedInteractions();
+      cleanupRuler();
     },
-    onToolDragCancel: () => {
-      // Fix bug where token is not locally displayed at its initial position on cancel
-      const manager = interactions.find(
-        value => value.initTime === currentRulerInitTime
-      )?.manager;
-
-      if (manager) {
-        manager[0](items => {
-          items.forEach(item => {
-            if (initialInteractedItem && item.id === initialInteractedItem.id)
-              item.position = initialInteractedItem.position;
-          });
-        });
-      }
-
-      currentRulerInitTime = 0;
-      endUnusedInteractions();
+    onDeactivate: async () => {
+      clearRulerItems("PLAYER");
+      if (interactions.length === 0) return;
+      await updateInteractionTargetItems(rulerPoints[0]);
+      cleanupRuler();
     },
   });
 
@@ -309,7 +351,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
       const newPosition = await calculateSegmentEndPosition(
         grid,
         rulerPoints[rulerPoints.length - 1],
-        pointerPosition
+        pointerPosition,
       );
 
       const positionChange = {
@@ -337,7 +379,7 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
     const newPosition = await calculateSegmentEndPosition(
       grid,
       rulerPoints[rulerPoints.length - 1],
-      pointerPosition
+      pointerPosition,
     );
 
     let newText: string | null = null;
@@ -354,11 +396,11 @@ export function createDragMeasureMode(grid: Grid, player: Player) {
 
     let items: Item[] = [];
     const manager = interactions.find(
-      value => value.initTime === currentRulerInitTime
+      (value) => value.initTime === currentRulerInitTime,
     )?.manager;
     if (manager) {
-      items = manager[0](items => {
-        items.forEach(item => {
+      items = manager[0]((items) => {
+        items.forEach((item) => {
           if (initialInteractedItem && item.id === initialInteractedItem.id) {
             item.position = newPosition;
           } else if (item.id === rulerIds.line && isCurve(item)) {

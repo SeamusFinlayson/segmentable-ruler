@@ -6,14 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "deploy-site": "./deploy.sh",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/showdown": "^2.0.6",
+    "prettier": "3.9.6",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
   },
   "dependencies": {
     "@owlbear-rodeo/sdk": "^3.1.0",
-    "color-parse": "^2.0.2"
+    "color-parse": "^2.0.2",
+    "showdown": "^2.1.0"
   }
 }

@@ -2,10 +2,10 @@ import OBR from "@owlbear-rodeo/sdk";
 import { createGrid } from "./types";
 import { Grid } from "./types";
 import { Player } from "./types";
-import { createClearRulersAction } from "./createClearRulersAction";
-import { createDragMeasureMode } from "./createDragMeasureMode";
+import { createRulerActions } from "./createRulerActions";
+import { createSharedRulerMode } from "./createSharedRulerMode";
 import { createSegmentableRulerTool } from "./createSegmentableRulerTool";
-import { createPrivateDragMeasureMode } from "./createPrivateDragMeasureMode";
+import { createPrivateDragMeasureMode } from "./createPrivateRulerMode";
 
 OBR.onReady(async () => {
   printVersionToConsole();
@@ -14,13 +14,15 @@ OBR.onReady(async () => {
 
 async function printVersionToConsole() {
   fetch("/manifest.json")
-    .then(response => response.json())
-    .then(json => console.log(json["name"] + " - version: " + json["version"]));
+    .then((response) => response.json())
+    .then((json) =>
+      console.log(json["name"] + " - version: " + json["version"]),
+    );
 }
 
 async function startWhenSceneIsReady() {
   // Handle when the scene is either changed or made ready after extension load
-  OBR.scene.onReadyChange(async isReady => {
+  OBR.scene.onReadyChange(async (isReady) => {
     if (isReady) start();
   });
 
@@ -30,6 +32,9 @@ async function startWhenSceneIsReady() {
 }
 
 async function start() {
+  createSegmentableRulerTool();
+  createRulerActions();
+
   const [
     gridDpi,
     gridType,
@@ -51,11 +56,9 @@ async function start() {
 
   const player: Player = { id: playerId, color: playerColor, role: playerRole };
 
-  startCallbacks(grid, player);
-  createSegmentableRulerTool();
-  createDragMeasureMode(grid, player);
+  createSharedRulerMode(grid, player);
   createPrivateDragMeasureMode(grid, player);
-  createClearRulersAction(player);
+  startCallbacks(grid, player);
 }
 
 // Keep passed objects up to date with the scene
@@ -64,24 +67,23 @@ async function startCallbacks(grid: Grid, player: Player) {
   if (!callbacksStarted) {
     callbacksStarted = true;
 
-    const unsubscribeFromGrid = OBR.scene.grid.onChange(async newGrid => {
+    const unsubscribeFromGrid = OBR.scene.grid.onChange(async (newGrid) => {
       grid.update(
         newGrid.dpi,
         newGrid.type,
         newGrid.measurement,
-        await OBR.scene.grid.getScale()
+        await OBR.scene.grid.getScale(),
       );
     });
 
-    const unsubscribeFromPlayer = OBR.player.onChange(async newPlayer => {
+    const unsubscribeFromPlayer = OBR.player.onChange(async (newPlayer) => {
       player.id = newPlayer.id;
       player.color = newPlayer.color;
       player.role = newPlayer.role;
-      createClearRulersAction(player);
     });
 
     // Unsubscribe listeners that rely on the scene if it stops being ready
-    const unsubscribeFromScene = OBR.scene.onReadyChange(isReady => {
+    const unsubscribeFromScene = OBR.scene.onReadyChange((isReady) => {
       if (!isReady) {
         unsubscribeFromGrid();
         unsubscribeFromPlayer();
