@@ -47,7 +47,7 @@ export function createRulerActions() {
     icons: [
       {
         icon: questionMarkIcon,
-        label: "Help",
+        label: "Instructions",
         filter: {
           activeTools: [TOOL_ID],
           metadata: [{ key: "measuring", value: false }],
