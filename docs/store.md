@@ -34,7 +34,7 @@ _A ruler for measuring segmented paths_
 - A player's ruler is automatically cleared when the switch to a different tool
 - You can manually clear your ruler by clicking the trash icon at the top of your screen. When a player with GM access clicks this button, it will clear all rulers, not just their own
 
-## Features
+### Features
 
 - Allows for complex paths with many segments to be measured
 - Easy to create new segments and remove unwanted segments
@@ -42,6 +42,7 @@ _A ruler for measuring segmented paths_
 - Hides measurements for hidden tokens
 - Allows you to make measurements privately
 - Holding ctrl while starting a measurement prevent tokens from being moved
+- Rulers check that players have the correct permissions before moving tokens
 
 ## Limitations
 

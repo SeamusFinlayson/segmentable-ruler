@@ -69,8 +69,20 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
     OBR.scene.items.deleteItems(Object.values(rulerIds));
     let interaction: InteractionManager<Item[]>;
 
+    const [updateMount, updateCharacter] = await Promise.all([
+      player.role === "GM" || OBR.player.hasPermission("MOUNT_UPDATE"),
+      player.role === "GM" || OBR.player.hasPermission("CHARACTER_UPDATE"),
+    ]);
+
     const token = event.target;
-    if (token && isImage(token) && !token.locked && !event.ctrlKey) {
+    if (
+      token &&
+      isImage(token) &&
+      ((token.layer === "CHARACTER" && updateCharacter) ||
+        (token.layer === "MOUNT" && updateMount)) &&
+      !token.locked &&
+      !event.ctrlKey
+    ) {
       initialInteractedItem = token;
       const startPosition = await snapPosition(grid, token.position);
       lastPosition = startPosition;
@@ -287,9 +299,22 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
           target: [
             { key: "locked", value: true, operator: "!=" },
             { key: "image", value: undefined, operator: "!=" },
+            { key: "layer", value: "CHARACTER" },
           ],
           metadata: [{ key: "ctrlPressed", value: true, operator: "!=" }],
           permissions: ["CHARACTER_UPDATE"],
+        },
+      },
+      {
+        cursor: "pointer",
+        filter: {
+          target: [
+            { key: "locked", value: true, operator: "!=" },
+            { key: "image", value: undefined, operator: "!=" },
+            { key: "layer", value: "MOUNT" },
+          ],
+          metadata: [{ key: "ctrlPressed", value: true, operator: "!=" }],
+          permissions: ["MOUNT_UPDATE"],
         },
       },
       { cursor: "move" },
