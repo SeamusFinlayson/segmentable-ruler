@@ -23,7 +23,6 @@ Install link: [https://segmentable-ruler.seamus-finlayson.ca/manifest.json](http
 
 **Clearing rulers**
 
-- A player's ruler is automatically cleared when the switch to a different tool
 - You can manually clear your ruler by clicking the trash icon at the top of your screen. When a player with GM access clicks this button, it will clear all rulers, not just their own
 
 ### Features
