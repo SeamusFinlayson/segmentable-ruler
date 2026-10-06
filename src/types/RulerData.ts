@@ -1,0 +1,12 @@
+import z from "zod";
+import { PointZod, PointsZod } from "./Points";
+
+export const RulerDataZod = z.object({
+  points: PointsZod,
+  position: PointZod,
+  creatingPlayerId: z.string(),
+  visible: z.boolean(),
+  color: z.string(),
+});
+
+export type RulerData = z.infer<typeof RulerDataZod>;

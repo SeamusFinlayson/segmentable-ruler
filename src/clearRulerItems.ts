@@ -1,13 +1,23 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { CREATED_BY_METADATA_ID } from "./idStrings";
 
-export async function clearRulerItems(selection: "PLAYER" | "ALL") {
-  const playerId = await OBR.player.getId();
+export async function clearRulerItems(
+  targets:
+    | {
+        scope: "PLAYER";
+        playerId?: string;
+      }
+    | {
+        scope: "ALL";
+      },
+) {
   let items = await OBR.scene.items.getItems();
 
-  if (selection === "PLAYER") {
+  if (targets.scope === "PLAYER") {
     items = items.filter(
-      (item) => item.metadata[CREATED_BY_METADATA_ID] === playerId,
+      (item) =>
+        item.metadata[CREATED_BY_METADATA_ID] ===
+        (targets.playerId ?? OBR.player.id),
     );
   } else {
     items = items.filter((item) => item.metadata[CREATED_BY_METADATA_ID]);

@@ -1,11 +1,5 @@
 import { GridType, GridMeasurement, GridScale } from "@owlbear-rodeo/sdk";
 
-export interface Player {
-  id: string;
-  color: string;
-  role: "GM" | "PLAYER";
-}
-
 export interface Grid {
   dpi: number;
   type: GridType;
@@ -45,16 +39,3 @@ export function createGrid(
 
   return grid;
 }
-
-export interface RulerIds {
-  background: string;
-  line: string;
-  label: string;
-  endDot: string;
-}
-
-export type ToolMetadata = {
-  measuring: boolean;
-  ignoreClickTarget: boolean;
-  points: "NONE" | "ONE" | "MULTIPLE";
-};

@@ -1,5 +1,5 @@
 import OBR, { Vector2 } from "@owlbear-rodeo/sdk";
-import { Grid } from "./types";
+import { Grid } from "./types/Grid";
 
 export async function calculateDisplayDistance(
   grid: Grid,

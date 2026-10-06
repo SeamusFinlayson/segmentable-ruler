@@ -19,6 +19,7 @@
     "@owlbear-rodeo/sdk": "^3.1.0",
     "@types/node": "^26.2.0",
     "color-parse": "^2.0.2",
-    "showdown": "^2.1.0"
+    "showdown": "^2.1.0",
+    "zod": "^4.6.5"
   }
 }

@@ -18,7 +18,9 @@ import {
   RULER_MESSAGE_CHANNEL,
   TOOL_ID,
 } from "./idStrings";
-import { Grid, Player, RulerIds } from "./types";
+import { Grid } from "./types/Grid";
+import { Player } from "./types/Player";
+import { RulerIds } from "./types/RulerIds";
 import { buildRuler } from "./rulerBuilder";
 import { updateToolMetadata } from "./updateToolMetadata";
 
@@ -152,7 +154,6 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
             grid,
             player,
             [startPosition, startPosition],
-            true,
             true,
           ),
         );

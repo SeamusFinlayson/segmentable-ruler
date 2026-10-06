@@ -8,6 +8,7 @@ import {
   xIcon,
 } from "./icons";
 import { clearRulerItems } from "./clearRulerItems";
+import { sendMessage } from "./sendMessage";
 
 export function createRulerActions() {
   OBR.tool.createAction({
@@ -23,7 +24,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () => clearRulerItems("ALL"),
+    onClick: () => clearRulerItems({ scope: "ALL" }),
   });
 
   OBR.tool.createAction({
@@ -39,7 +40,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () => clearRulerItems("PLAYER"),
+    onClick: () => clearRulerItems({ scope: "PLAYER" }),
   });
 
   OBR.tool.createAction({
@@ -81,10 +82,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () =>
-      OBR.broadcast.sendMessage(RULER_MESSAGE_CHANNEL, "CANCEL", {
-        destination: "LOCAL",
-      }),
+    onClick: () => sendMessage({ type: "CANCEL" }),
   });
 
   OBR.tool.createAction({
@@ -102,10 +100,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () =>
-      OBR.broadcast.sendMessage(RULER_MESSAGE_CHANNEL, "UNDO", {
-        destination: "LOCAL",
-      }),
+    onClick: () => sendMessage({ type: "UNDO" }),
   });
 
   OBR.tool.createAction({
@@ -124,9 +119,6 @@ export function createRulerActions() {
       },
     ],
     shortcut: "Enter",
-    onClick: () =>
-      OBR.broadcast.sendMessage(RULER_MESSAGE_CHANNEL, "CONFIRM", {
-        destination: "LOCAL",
-      }),
+    onClick: () => sendMessage({ type: "CONFIRM" }),
   });
 }
