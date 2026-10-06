@@ -54,11 +54,14 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () =>
+    onClick: (_, anchorElementId) =>
       OBR.popover.open({
         id: getPluginId("help-popover"),
         height: 800,
         width: 600,
+        anchorElementId,
+        transformOrigin: { vertical: "TOP", horizontal: "CENTER" },
+        anchorOrigin: { vertical: "BOTTOM", horizontal: "CENTER" },
         url: "/docs.html",
       }),
   });

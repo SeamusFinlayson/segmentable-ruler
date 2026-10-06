@@ -8,22 +8,23 @@ Install link: [https://segmentable-ruler.seamus-finlayson.ca/manifest.json](http
 
 ## How it works
 
-**Setup**
+### Setup
 
 1. Install the extension
 2. Make sure the extension is enabled in the room in which you wish to use it
 3. Select the Segmentable Ruler tool in the toolbar or use the shortcut **Z**
 
-**Making a measurement**
+### Making a measurement
 
 - To begin measuring, click a token or an empty spot on the map
 - To add ruler segments, click spots on the map
 - To remove a segment, press Backspace, Delete, or the Remove Segment button at the top of your screen
 - To finish a measurement, double click on the map, press Enter, or press the Confirm button at the top of your screen
 
-**Clearing rulers**
+### Clearing rulers
 
-- You can manually clear your ruler by clicking the trash icon at the top of your screen. When a player with GM access clicks this button, it will clear all rulers, not just their own
+- You can manually clear your ruler by clicking the trash icon at the top of your screen
+- When a GM clicks this button, it will clear all rulers, not just their own
 
 ### Features
 
@@ -32,8 +33,18 @@ Install link: [https://segmentable-ruler.seamus-finlayson.ca/manifest.json](http
 - Works with all grid and measurement types
 - Hides measurements for hidden tokens
 - Allows you to make measurements privately
-- Holding ctrl while starting a measurement prevent tokens from being moved
 - Rulers check that players have the correct permissions before moving tokens
+
+### Tricks
+
+- Holding alt while starting a measurement prevent tokens from being moved
+- Holding ctrl while starting a euclidean measurement to snap the token's initial position to the grid
+- Holding ctrl while making a euclidean measurement to snap to the grid
+- The number of decimal points shown on the ruler is the same as in the scene's grid size setting
+
+### Known Issues
+
+- On isometric and diametric grids alternating diagonal measurements count diagonals for each segment where they should be counted across the entire measurement
 
 ## Feature Requests
 

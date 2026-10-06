@@ -15,7 +15,7 @@ export function createSegmentableRulerTool() {
     shortcut: "Z",
     defaultMetadata: {
       measuring: false,
-      ctrlPressed: false,
+      ignoreClickTarget: false,
       points: "NONE",
     } satisfies ToolMetadata,
   });

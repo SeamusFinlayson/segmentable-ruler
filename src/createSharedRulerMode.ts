@@ -52,9 +52,14 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
   let sharedAttachments: Item[] = [];
   let localAttachments: Item[] = [];
 
+  // let ctrlKeyPressed = false;
   let rulerPoints: Vector2[] = []; // Points in the line being measured
   let pointerPosition: Vector2; // Track pointer position so it accessible to keyboard events
   let lastPosition: Vector2; // Memoize last position the token snapped to to prevent path measurement recalculation
+
+  let ctrlKeyPressed = false;
+  const checkSnapping = () =>
+    grid.measurement !== "EUCLIDEAN" || ctrlKeyPressed;
 
   const rulerIds: RulerIds = {
     background: getItemId("background", player.id),
@@ -80,6 +85,8 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
       .map((player) => player.metadata?.[getPluginId("targetItem")])
       .filter((val) => typeof val === "string");
 
+    const snap = checkSnapping();
+
     if (
       token &&
       isImage(token) &&
@@ -87,10 +94,12 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
       ((token.layer === "CHARACTER" && updateCharacter) ||
         (token.layer === "MOUNT" && updateMount)) &&
       !token.locked &&
-      !event.ctrlKey
+      !event.altKey
     ) {
       initialInteractedItem = token;
-      const startPosition = await snapPosition(grid, token.position);
+      const startPosition = snap
+        ? await snapPosition(grid, token.position)
+        : token.position;
       lastPosition = startPosition;
       console.log("start poistion", startPosition);
       rulerPoints = [];
@@ -102,7 +111,15 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
             rulerIds,
             grid,
             player,
-            [startPosition, await snapPosition(grid, pointerPosition)],
+            [
+              startPosition,
+              await calculateSegmentEndPosition(
+                grid,
+                startPosition,
+                pointerPosition,
+                !snap,
+              ),
+            ],
             token.visible,
             true,
           )),
@@ -114,7 +131,9 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
       ]);
     } else {
       initialInteractedItem = null;
-      const startPosition = await snapPosition(grid, pointerPosition);
+      const startPosition = snap
+        ? await snapPosition(grid, pointerPosition)
+        : pointerPosition;
       lastPosition = startPosition;
       rulerPoints = [];
       rulerPoints.push(startPosition);
@@ -125,7 +144,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
             rulerIds,
             grid,
             player,
-            [startPosition, pointerPosition],
+            [startPosition, startPosition],
             true,
             true,
           ),
@@ -138,6 +157,8 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
     // Because this function is asynchronous and contains await statements, interactions
     // may already be expired if the drag was short enough in duration
     endUnusedInteractions();
+
+    updateToolItems();
 
     setTimeout(() => {
       recreateRulerInteractions(interactionStartTime);
@@ -153,8 +174,9 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
 
       const endPointPosition = await calculateSegmentEndPosition(
         grid,
-        rulerPoints[rulerPoints.length - 1],
+        rulerPoints[0],
         pointerPosition,
+        !checkSnapping(),
       );
       if (initialInteractedItem !== null) {
         const endPointItem = { ...initialInteractedItem };
@@ -202,8 +224,6 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
       setTimeout(() => {
         recreateRulerInteractions(interactionStartTime);
       }, 700);
-    } else {
-      console.log("ended");
     }
     endUnusedInteractions();
   };
@@ -213,8 +233,9 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
     rulerPoints.push(
       await calculateSegmentEndPosition(
         grid,
-        rulerPoints[rulerPoints.length - 1],
+        rulerPoints[0],
         pointerPosition,
+        !checkSnapping(),
       ),
     );
     if (rulerPoints.length >= 2) updateToolMetadata({ points: "MULTIPLE" });
@@ -234,24 +255,19 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
   };
 
   const addRulerToScene = (items: Item[]) => {
-    const ruler: Item[] = [];
-    let addItemsToScene = true;
-    for (let rulerId of Object.values(rulerIds)) {
-      for (let item of items) {
-        if (
-          item.id === rulerIds.label &&
-          isLabel(item) &&
-          item.text.plainText.startsWith("0")
-        ) {
-          addItemsToScene = false;
-        }
-        if (item.id === rulerId) {
-          ruler.push(item);
-          break;
-        }
+    let lengthIsZero = false;
+    for (let item of items) {
+      if (
+        item.id === rulerIds.label &&
+        isLabel(item) &&
+        item.text.plainText.startsWith("0")
+      ) {
+        lengthIsZero = true;
+        break;
       }
     }
-    if (addItemsToScene) OBR.scene.items.addItems(ruler);
+    if (lengthIsZero) return;
+    OBR.scene.items.addItems(items);
   };
 
   const cleanupRuler = () => {
@@ -310,7 +326,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
             { key: "image", value: undefined, operator: "!=" },
             { key: "layer", value: "CHARACTER" },
           ],
-          metadata: [{ key: "ctrlPressed", value: true, operator: "!=" }],
+          metadata: [{ key: "ignoreClickTarget", value: true, operator: "!=" }],
           permissions: ["CHARACTER_UPDATE"],
         },
       },
@@ -322,7 +338,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
             { key: "image", value: undefined, operator: "!=" },
             { key: "layer", value: "MOUNT" },
           ],
-          metadata: [{ key: "ctrlPressed", value: true, operator: "!=" }],
+          metadata: [{ key: "ignoreClickTarget", value: true, operator: "!=" }],
           permissions: ["MOUNT_UPDATE"],
         },
       },
@@ -341,21 +357,30 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
       }
     },
     onToolMove: (_, event) => {
-      updateToolMetadata({ ctrlPressed: event.ctrlKey });
-      if (interactions.length === 0) return;
+      updateToolMetadata({ ignoreClickTarget: event.altKey });
       pointerPosition = event.pointerPosition;
+      ctrlKeyPressed = event.ctrlKey;
+      if (interactions.length === 0) return;
       updateToolItems();
     },
     onKeyDown: async (_, event) => {
+      updateToolMetadata({ ignoreClickTarget: event.altKey });
+      ctrlKeyPressed = event.ctrlKey;
+
       if (interactions.length === 0) return;
 
       if (event.key === "Delete") removeSegment();
-      if (event.key === "Backspace") removeSegment();
-
-      if (event.key === "Escape") {
-        await updateInteractionTargetItems(rulerPoints[0]);
+      else if (event.key === "Backspace") removeSegment();
+      else if (event.key === "Escape") {
+        await updateInteractionTargetItems(rulerPoints[0], true);
         cleanupRuler();
-      }
+      } else updateToolItems();
+    },
+    onKeyUp: async (_, event) => {
+      updateToolMetadata({ ignoreClickTarget: event.altKey });
+      ctrlKeyPressed = event.ctrlKey;
+      if (interactions.length === 0) return;
+      updateToolItems();
     },
     onToolDragEnd(_, event) {
       if (interactions.length === 0) return;
@@ -374,24 +399,28 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
     },
     onDeactivate: async () => {
       if (interactions.length === 0) return;
-      await updateInteractionTargetItems(rulerPoints[0]);
+      await updateInteractionTargetItems(rulerPoints[0], true);
       cleanupRuler();
     },
   });
 
-  async function updateInteractionTargetItems(pointerPosition: Vector2) {
+  async function updateInteractionTargetItems(
+    position: Vector2,
+    disableSnap = false,
+  ) {
     if (interactions && initialInteractedItem) {
-      const startPosition = rulerPoints[0];
-
-      const newPosition = await calculateSegmentEndPosition(
-        grid,
-        rulerPoints[rulerPoints.length - 1],
-        pointerPosition,
-      );
+      const newPosition = disableSnap
+        ? initialInteractedItem.position
+        : await calculateSegmentEndPosition(
+            grid,
+            rulerPoints[0],
+            position,
+            !checkSnapping(),
+          );
 
       const positionChange = {
-        x: newPosition.x - startPosition.x,
-        y: newPosition.y - startPosition.y,
+        x: newPosition.x - initialInteractedItem.position.x,
+        y: newPosition.y - initialInteractedItem.position.y,
       };
 
       // Update dragged item and shared attachments
@@ -413,8 +442,9 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
   async function updateToolItems(forceRecalculation = false): Promise<Item[]> {
     const newPosition = await calculateSegmentEndPosition(
       grid,
-      rulerPoints[rulerPoints.length - 1],
+      rulerPoints[0],
       pointerPosition,
+      !checkSnapping(),
     );
 
     let newText: string | null = null;

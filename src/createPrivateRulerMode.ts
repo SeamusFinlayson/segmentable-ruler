@@ -33,6 +33,10 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     endDot: getItemId("end-point", player.id, true),
   };
 
+  let ctrlKeyPressed = false;
+  const checkSnapping = () =>
+    grid.measurement !== "EUCLIDEAN" || ctrlKeyPressed;
+
   // Set flags to reset interactions
   const expireAllInteractions = () => {
     // Only expire interactions if the user has started a new drag
@@ -64,6 +68,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
         grid,
         rulerPoints[rulerPoints.length - 1],
         pointerPosition,
+        !checkSnapping(),
       ),
     );
     if (rulerPoints.length >= 2) updateToolMetadata({ points: "MULTIPLE" });
@@ -129,12 +134,14 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
         pointerPosition = event.pointerPosition;
         dragStarted = true;
 
-        const startPosition = await snapPosition(
-          grid,
-          event.target && isImage(event.target) && !event.target.locked
-            ? event.target.position
-            : pointerPosition,
-        );
+        const startPosition = !checkSnapping()
+          ? pointerPosition
+          : await snapPosition(
+              grid,
+              event.target && isImage(event.target) && !event.target.locked
+                ? event.target.position
+                : pointerPosition,
+            );
         rulerPoints = [];
         rulerPoints.push(startPosition);
         lastPosition = startPosition;
@@ -144,7 +151,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
             rulerIds,
             grid,
             player,
-            [startPosition, await snapPosition(grid, pointerPosition)],
+            [startPosition, startPosition],
             true,
             true,
           ),
@@ -159,23 +166,30 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
       }
     },
     onToolMove: (_, event) => {
-      if (!dragStarted) return;
+      ctrlKeyPressed = event.ctrlKey;
       pointerPosition = event.pointerPosition;
+      if (!dragStarted) return;
       updateToolItems();
     },
-    onToolDragEnd: async () => {
+    onToolDragEnd: () => {
       if (!dragStarted) return;
       addSegment();
     },
-    onKeyDown: async (_, event) => {
+    onKeyDown: (_, event) => {
+      ctrlKeyPressed = event.ctrlKey;
       if (!dragStarted) return;
 
       if (event.key === "Delete") removeSegment();
-      if (event.key === "Backspace") removeSegment();
-
-      if (event.key === "Escape") cleanupRuler();
+      else if (event.key === "Backspace") removeSegment();
+      else if (event.key === "Escape") cleanupRuler();
+      else updateToolItems();
     },
-    onToolDoubleClick: async () => {
+    onKeyUp: (_, event) => {
+      ctrlKeyPressed = event.ctrlKey;
+      if (!dragStarted) return;
+      updateToolItems();
+    },
+    onToolDoubleClick: () => {
       if (!dragStarted) return;
       cleanupRuler();
     },
@@ -190,6 +204,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
       grid,
       rulerPoints[rulerPoints.length - 1],
       pointerPosition,
+      !checkSnapping(),
     );
 
     let labelText: string | null = null;
