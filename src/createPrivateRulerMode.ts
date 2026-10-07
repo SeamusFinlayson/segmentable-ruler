@@ -13,6 +13,7 @@ import {
   getLabelPosition,
 } from "./mathHelpers";
 import {
+  CONTINUE_READY_METADATA_ID,
   getItemId,
   PRIVATE_DRAG_MEASURE_MODE_ID,
   RULER_MESSAGE_CHANNEL,
@@ -120,6 +121,16 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     ],
     cursors: [
       {
+        cursor: "pointer",
+        filter: {
+          target: [
+            { key: ["metadata", CONTINUE_READY_METADATA_ID], value: true },
+          ],
+          metadata: [{ key: "ignoreClickTarget", value: true, operator: "!=" }],
+          permissions: ["CHARACTER_UPDATE"],
+        },
+      },
+      {
         cursor: "crosshair",
         filter: {
           metadata: [{ key: "measuring", value: true, operator: "==" }],
@@ -133,6 +144,8 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     },
     onToolClick: async (_, event) => {
       if (!dragStarted) {
+        if (event.target?.metadata[CONTINUE_READY_METADATA_ID] === true)
+          return true;
         pointerPosition = event.pointerPosition;
         dragStarted = true;
 
@@ -165,6 +178,8 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
       } else {
         addSegment();
       }
+
+      return false;
     },
     onToolMove: (_, event) => {
       ctrlKeyPressed = event.ctrlKey;
