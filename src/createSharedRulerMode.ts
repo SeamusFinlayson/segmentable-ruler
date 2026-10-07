@@ -357,6 +357,16 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
         cursor: "pointer",
         filter: {
           target: [
+            { key: ["metadata", CONTINUE_READY_METADATA_ID], value: true },
+          ],
+          metadata: [{ key: "ignoreClickTarget", value: true, operator: "!=" }],
+          permissions: ["CHARACTER_UPDATE"],
+        },
+      },
+      {
+        cursor: "pointer",
+        filter: {
+          target: [
             { key: "locked", value: true, operator: "!=" },
             { key: "image", value: undefined, operator: "!=" },
             { key: "layer", value: "MOUNT" },
@@ -371,13 +381,16 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
       target: [{ key: "locked", value: true }],
       metadata: [{ key: "measuring", value: false }],
     },
-    onToolClick: async (_, event) => {
+    onToolClick: (_, event) => {
       if (interactions.length === 0) {
+        if (event.target?.metadata[CONTINUE_READY_METADATA_ID] === true)
+          return true;
         createRulerInteractions(event);
         updateToolMetadata({ measuring: true, points: "ONE" });
       } else {
         addSegment(event.target?.position);
       }
+      return false;
     },
     onToolMove: (_, event) => {
       updateToolMetadata({ ignoreClickTarget: event.altKey });
