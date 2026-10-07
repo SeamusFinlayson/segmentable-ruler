@@ -211,7 +211,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
               grid,
               player,
               [...rulerPoints, endPointPosition],
-              true,
+              rulerVisible,
             ),
           ),
         ]);
