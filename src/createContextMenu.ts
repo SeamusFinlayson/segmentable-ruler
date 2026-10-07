@@ -2,7 +2,7 @@ import OBR, { Math2, isCurve } from "@owlbear-rodeo/sdk";
 import {
   CONTEXT_MENU_ID,
   DRAG_MEASURE_MODE_ID,
-  STORED_MEASUREMENT_METADATA_ID,
+  CONTINUE_READY_METADATA_ID,
   TOOL_ID,
 } from "./idStrings";
 import { sendMessage } from "./sendMessage";
@@ -18,9 +18,8 @@ export function createContextMenu() {
         filter: {
           every: [
             {
-              key: ["metadata", STORED_MEASUREMENT_METADATA_ID],
-              operator: "!=",
-              value: undefined,
+              key: ["metadata", CONTINUE_READY_METADATA_ID],
+              value: true,
             },
           ],
           max: 1,

@@ -20,7 +20,7 @@ import {
   getItemId,
   getPluginId,
   RULER_MESSAGE_CHANNEL,
-  STORED_MEASUREMENT_METADATA_ID,
+  CONTINUE_READY_METADATA_ID,
   TOOL_ID,
 } from "./idStrings";
 import { Grid } from "./types/Grid";
@@ -270,7 +270,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
         return;
       }
       if (item.id === rulerIds.line) {
-        item.metadata[STORED_MEASUREMENT_METADATA_ID] = {};
+        item.metadata[CONTINUE_READY_METADATA_ID] = true;
       }
     }
 

@@ -10,7 +10,7 @@ export const PRIVATE_DRAG_MEASURE_MODE_ID = getPluginId("privateDragMode");
 export const CLEAR_RULERS_ACTION_ID = getPluginId("deleteAction");
 export const RULER_MESSAGE_CHANNEL = getPluginId("message");
 export const CREATED_BY_METADATA_ID = getPluginId("playerId");
-export const STORED_MEASUREMENT_METADATA_ID = getPluginId("storedMeasurement");
+export const CONTINUE_READY_METADATA_ID = getPluginId("continueReady");
 
 export function getItemId(
   name: string,
