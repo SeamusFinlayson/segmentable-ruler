@@ -288,11 +288,11 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
     const data = MessageZod.parse(event.data);
 
     if (data.type === "RULER_DATA") {
-      console.log(data);
-      clearRulerItems({ scope: "PLAYER", playerId: data.creatingPlayerId });
-      clearRulerItems({ scope: "PLAYER", playerId: player.id });
+      await clearRulerItems({ scope: "PLAYER", playerId: data.playerId });
+      await clearRulerItems({ scope: "PLAYER" });
       rulerPoints = data.points;
       pointerPosition = data.points[data.points.length - 1];
+      lastPosition = data.points[data.points.length - 1];
       const time = Date.now();
       currentRulerInitTime = time;
       rulerVisible = data.visible;
@@ -443,7 +443,7 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
           rulerIds,
           grid,
           {
-            id: restorableRulerData.creatingPlayerId,
+            id: restorableRulerData.playerId,
             color: restorableRulerData.color,
           },
           restorableRulerData.points,

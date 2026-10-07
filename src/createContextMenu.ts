@@ -1,4 +1,4 @@
-import OBR, { isCurve } from "@owlbear-rodeo/sdk";
+import OBR, { Math2, isCurve } from "@owlbear-rodeo/sdk";
 import {
   CONTEXT_MENU_ID,
   DRAG_MEASURE_MODE_ID,
@@ -37,11 +37,14 @@ export function createContextMenu() {
       OBR.tool.activateTool(TOOL_ID);
       OBR.tool.activateMode(TOOL_ID, DRAG_MEASURE_MODE_ID);
 
+      const points = target.points.map((point) =>
+        Math2.add(point, target.position),
+      );
+
       sendMessage({
         type: "RULER_DATA",
-        points: target.points,
-        position: target.position,
-        creatingPlayerId: target.createdUserId,
+        points: points,
+        playerId: target.createdUserId,
         visible: target.visible,
         color: target.style.strokeColor,
       });

@@ -1,5 +1,5 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { getPluginId, RULER_MESSAGE_CHANNEL, TOOL_ID } from "./idStrings";
+import { getPluginId, TOOL_ID } from "./idStrings";
 import {
   checkIcon,
   questionMarkIcon,

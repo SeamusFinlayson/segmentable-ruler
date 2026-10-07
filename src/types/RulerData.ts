@@ -1,10 +1,9 @@
 import z from "zod";
-import { PointZod, PointsZod } from "./Points";
+import { PointsZod } from "./Points";
 
 export const RulerDataZod = z.object({
   points: PointsZod,
-  position: PointZod,
-  creatingPlayerId: z.string(),
+  playerId: z.string(),
   visible: z.boolean(),
   color: z.string(),
 });
