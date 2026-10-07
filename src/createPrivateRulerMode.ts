@@ -215,6 +215,8 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     },
   });
 
+  OBR.scene.onReadyChange(cleanupRuler);
+
   async function updateToolItems(forceRecalculation = false) {
     const newPosition = await calculateSegmentEndPosition(
       grid,

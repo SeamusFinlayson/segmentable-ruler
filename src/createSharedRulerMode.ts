@@ -110,7 +110,6 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
         ? await snapPosition(grid, token.position)
         : token.position;
       lastPosition = startPosition;
-      console.log("start poistion", startPosition);
       rulerPoints = [];
       rulerPoints.push(startPosition);
       rulerVisible = token.visible;
@@ -445,6 +444,8 @@ export function createSharedRulerMode(grid: Grid, player: Player) {
       cleanupRuler();
     },
   });
+
+  OBR.scene.onReadyChange(cleanupRuler);
 
   async function updateInteractionTargetItems(
     position: Vector2,
