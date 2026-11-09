@@ -24,6 +24,7 @@ import { Player } from "./types/Player";
 import { RulerIds } from "./types/RulerIds";
 import { buildRuler } from "./rulerBuilder";
 import { updateToolMetadata } from "./updateToolMetadata";
+import { MessageZod } from "./types/Message";
 
 export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
   let dragStarted = false;
@@ -98,14 +99,11 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
 
   OBR.broadcast.onMessage(RULER_MESSAGE_CHANNEL, async (event) => {
     if (!dragStarted) return;
+    const data = MessageZod.parse(event.data);
 
-    if (event.data === "CONFIRM") {
-      cleanupRuler();
-    } else if (event.data === "UNDO") {
-      removeSegment();
-    } else if (event.data === "CANCEL") {
-      cleanupRuler();
-    }
+    if (data.type === "CONFIRM") cleanupRuler();
+    else if (data.type === "UNDO") removeSegment();
+    else if (data.type === "CANCEL") cleanupRuler();
   });
 
   OBR.tool.createMode({
