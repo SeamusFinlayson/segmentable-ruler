@@ -1,11 +1,12 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { createGrid } from "./types";
-import { Grid } from "./types";
-import { Player } from "./types";
+import { createGrid } from "./types/Grid";
+import { Grid } from "./types/Grid";
+import { Player } from "./types/Player";
 import { createRulerActions } from "./createRulerActions";
 import { createSharedRulerMode } from "./createSharedRulerMode";
 import { createSegmentableRulerTool } from "./createSegmentableRulerTool";
 import { createPrivateDragMeasureMode } from "./createPrivateRulerMode";
+import { createContextMenu } from "./createContextMenu";
 
 OBR.onReady(async () => {
   printVersionToConsole();
@@ -34,13 +35,13 @@ async function startWhenSceneIsReady() {
 async function start() {
   createSegmentableRulerTool();
   createRulerActions();
+  createContextMenu();
 
   const [
     gridDpi,
     gridType,
     gridMeasurement,
     gridScale,
-    playerId,
     playerColor,
     playerRole,
   ] = await Promise.all([
@@ -48,13 +49,16 @@ async function start() {
     OBR.scene.grid.getType(),
     OBR.scene.grid.getMeasurement(),
     OBR.scene.grid.getScale(),
-    OBR.player.getId(),
     OBR.player.getColor(),
     OBR.player.getRole(),
   ]);
   const grid = createGrid(gridDpi, gridType, gridMeasurement, gridScale);
 
-  const player: Player = { id: playerId, color: playerColor, role: playerRole };
+  const player: Player = {
+    id: OBR.player.id,
+    color: playerColor,
+    role: playerRole,
+  };
 
   createSharedRulerMode(grid, player);
   createPrivateDragMeasureMode(grid, player);

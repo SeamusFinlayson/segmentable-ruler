@@ -13,14 +13,18 @@ import {
   getLabelPosition,
 } from "./mathHelpers";
 import {
+  CONTINUE_READY_METADATA_ID,
   getItemId,
   PRIVATE_DRAG_MEASURE_MODE_ID,
   RULER_MESSAGE_CHANNEL,
   TOOL_ID,
 } from "./idStrings";
-import { Grid, Player, RulerIds } from "./types";
+import { Grid } from "./types/Grid";
+import { Player } from "./types/Player";
+import { RulerIds } from "./types/RulerIds";
 import { buildRuler } from "./rulerBuilder";
 import { updateToolMetadata } from "./updateToolMetadata";
+import { MessageZod } from "./types/Message";
 
 export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
   let dragStarted = false;
@@ -32,6 +36,10 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     label: getItemId("label", player.id, true),
     endDot: getItemId("end-point", player.id, true),
   };
+
+  let ctrlKeyPressed = false;
+  const checkSnapping = () =>
+    grid.measurement !== "EUCLIDEAN" || ctrlKeyPressed;
 
   // Set flags to reset interactions
   const expireAllInteractions = () => {
@@ -64,6 +72,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
         grid,
         rulerPoints[rulerPoints.length - 1],
         pointerPosition,
+        !checkSnapping(),
       ),
     );
     if (rulerPoints.length >= 2) updateToolMetadata({ points: "MULTIPLE" });
@@ -90,14 +99,11 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
 
   OBR.broadcast.onMessage(RULER_MESSAGE_CHANNEL, async (event) => {
     if (!dragStarted) return;
+    const data = MessageZod.parse(event.data);
 
-    if (event.data === "CONFIRM") {
-      cleanupRuler();
-    } else if (event.data === "UNDO") {
-      removeSegment();
-    } else if (event.data === "CANCEL") {
-      cleanupRuler();
-    }
+    if (data.type === "CONFIRM") cleanupRuler();
+    else if (data.type === "UNDO") removeSegment();
+    else if (data.type === "CANCEL") cleanupRuler();
   });
 
   OBR.tool.createMode({
@@ -113,6 +119,16 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     ],
     cursors: [
       {
+        cursor: "pointer",
+        filter: {
+          target: [
+            { key: ["metadata", CONTINUE_READY_METADATA_ID], value: true },
+          ],
+          metadata: [{ key: "ignoreClickTarget", value: true, operator: "!=" }],
+          permissions: ["CHARACTER_UPDATE"],
+        },
+      },
+      {
         cursor: "crosshair",
         filter: {
           metadata: [{ key: "measuring", value: true, operator: "==" }],
@@ -126,15 +142,19 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     },
     onToolClick: async (_, event) => {
       if (!dragStarted) {
+        if (event.target?.metadata[CONTINUE_READY_METADATA_ID] === true)
+          return true;
         pointerPosition = event.pointerPosition;
         dragStarted = true;
 
-        const startPosition = await snapPosition(
-          grid,
-          event.target && isImage(event.target) && !event.target.locked
-            ? event.target.position
-            : pointerPosition,
-        );
+        const startPosition = !checkSnapping()
+          ? pointerPosition
+          : await snapPosition(
+              grid,
+              event.target && isImage(event.target) && !event.target.locked
+                ? event.target.position
+                : pointerPosition,
+            );
         rulerPoints = [];
         rulerPoints.push(startPosition);
         lastPosition = startPosition;
@@ -144,8 +164,7 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
             rulerIds,
             grid,
             player,
-            [startPosition, await snapPosition(grid, pointerPosition)],
-            true,
+            [startPosition, startPosition],
             true,
           ),
         );
@@ -157,25 +176,34 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
       } else {
         addSegment();
       }
+
+      return false;
     },
     onToolMove: (_, event) => {
-      if (!dragStarted) return;
+      ctrlKeyPressed = event.ctrlKey;
       pointerPosition = event.pointerPosition;
+      if (!dragStarted) return;
       updateToolItems();
     },
-    onToolDragEnd: async () => {
+    onToolDragEnd: () => {
       if (!dragStarted) return;
       addSegment();
     },
-    onKeyDown: async (_, event) => {
+    onKeyDown: (_, event) => {
+      ctrlKeyPressed = event.ctrlKey;
       if (!dragStarted) return;
 
       if (event.key === "Delete") removeSegment();
-      if (event.key === "Backspace") removeSegment();
-
-      if (event.key === "Escape") cleanupRuler();
+      else if (event.key === "Backspace") removeSegment();
+      else if (event.key === "Escape") cleanupRuler();
+      else updateToolItems();
     },
-    onToolDoubleClick: async () => {
+    onKeyUp: (_, event) => {
+      ctrlKeyPressed = event.ctrlKey;
+      if (!dragStarted) return;
+      updateToolItems();
+    },
+    onToolDoubleClick: () => {
       if (!dragStarted) return;
       cleanupRuler();
     },
@@ -185,11 +213,14 @@ export function createPrivateDragMeasureMode(grid: Grid, player: Player) {
     },
   });
 
+  OBR.scene.onReadyChange(cleanupRuler);
+
   async function updateToolItems(forceRecalculation = false) {
     const newPosition = await calculateSegmentEndPosition(
       grid,
       rulerPoints[rulerPoints.length - 1],
       pointerPosition,
+      !checkSnapping(),
     );
 
     let labelText: string | null = null;

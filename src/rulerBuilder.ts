@@ -6,18 +6,24 @@ import {
   buildShape,
 } from "@owlbear-rodeo/sdk";
 import { getLabelPosition, calculateDisplayDistance } from "./mathHelpers";
-import { Grid, Player, RulerIds } from "./types";
+import { Grid } from "./types/Grid";
+import { Player } from "./types/Player";
+import { RulerIds } from "./types/RulerIds";
 import parse from "color-parse";
 import { CREATED_BY_METADATA_ID } from "./idStrings";
+
+type Options = { endDot: boolean };
 
 export async function buildRuler(
   rulerIds: RulerIds,
   grid: Grid,
-  player: Player,
+  player: Omit<Player, "role">,
   points: Vector2[],
   visible: boolean,
-  endDot: boolean,
+  options?: Partial<Options>,
 ): Promise<Item[]> {
+  const definedOptions = { endDot: true, ...options };
+
   const rulerConstituentItems: any[] = [];
 
   rulerConstituentItems.push(
@@ -54,7 +60,7 @@ export async function buildRuler(
       .build(),
   );
 
-  if (endDot) {
+  if (definedOptions.endDot) {
     rulerConstituentItems.push(
       buildShape()
         .id(rulerIds.endDot)

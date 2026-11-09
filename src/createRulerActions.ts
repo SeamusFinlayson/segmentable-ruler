@@ -1,5 +1,5 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { getPluginId, RULER_MESSAGE_CHANNEL, TOOL_ID } from "./idStrings";
+import { getPluginId, TOOL_ID } from "./idStrings";
 import {
   checkIcon,
   questionMarkIcon,
@@ -8,6 +8,7 @@ import {
   xIcon,
 } from "./icons";
 import { clearRulerItems } from "./clearRulerItems";
+import { sendMessage } from "./sendMessage";
 
 export function createRulerActions() {
   OBR.tool.createAction({
@@ -23,7 +24,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () => clearRulerItems("ALL"),
+    onClick: () => clearRulerItems({ scope: "ALL" }),
   });
 
   OBR.tool.createAction({
@@ -39,7 +40,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () => clearRulerItems("PLAYER"),
+    onClick: () => clearRulerItems({ scope: "PLAYER" }),
   });
 
   OBR.tool.createAction({
@@ -54,11 +55,14 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () =>
+    onClick: (_, anchorElementId) =>
       OBR.popover.open({
         id: getPluginId("help-popover"),
         height: 800,
         width: 600,
+        anchorElementId,
+        transformOrigin: { vertical: "TOP", horizontal: "CENTER" },
+        anchorOrigin: { vertical: "BOTTOM", horizontal: "CENTER" },
         url: "/docs.html",
       }),
   });
@@ -78,10 +82,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () =>
-      OBR.broadcast.sendMessage(RULER_MESSAGE_CHANNEL, "CANCEL", {
-        destination: "LOCAL",
-      }),
+    onClick: () => sendMessage({ type: "CANCEL" }),
   });
 
   OBR.tool.createAction({
@@ -99,10 +100,7 @@ export function createRulerActions() {
         },
       },
     ],
-    onClick: () =>
-      OBR.broadcast.sendMessage(RULER_MESSAGE_CHANNEL, "UNDO", {
-        destination: "LOCAL",
-      }),
+    onClick: () => sendMessage({ type: "UNDO" }),
   });
 
   OBR.tool.createAction({
@@ -121,9 +119,6 @@ export function createRulerActions() {
       },
     ],
     shortcut: "Enter",
-    onClick: () =>
-      OBR.broadcast.sendMessage(RULER_MESSAGE_CHANNEL, "CONFIRM", {
-        destination: "LOCAL",
-      }),
+    onClick: () => sendMessage({ type: "CONFIRM" }),
   });
 }
