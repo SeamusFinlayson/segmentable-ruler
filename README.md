@@ -37,9 +37,9 @@ Install link: [https://segmentable-ruler.seamus-finlayson.ca/manifest.json](http
 
 ### Tricks
 
-- Holding alt while starting a measurement prevent tokens from being moved
-- Holding ctrl while starting a euclidean measurement to snap the token's initial position to the grid
-- Holding ctrl while making a euclidean measurement to snap to the grid
+- Holding alt while starting a measurement prevents tokens from being moved
+- Holding ctrl while starting a euclidean measurement snaps the token's initial position to the grid
+- Holding ctrl while making a euclidean measurement snaps to the grid
 - The number of decimal points shown on the ruler is the same as in the scene's grid size setting
 - Right click your or another player's ruler and selected the continue measuremnt context menu option to modify the measurement
 
